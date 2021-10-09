@@ -355,7 +355,12 @@ if __name__ == '__main__':
     data = []
     masks = []
     data_folders = []
-    basepath = Path(r'D:/Fedz/Pattern_Recognition_Project/HipOp_OK') 
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('basepath', type = str, help='Path to the working directory in which the data is contained')
+    args = parser.parse_args()
+    
+    basepath = Path(args.basepath)  
     
     
     files_in_basepath = basepath.iterdir()
@@ -367,15 +372,15 @@ if __name__ == '__main__':
                 path = basepath / '{}'.format(item.name)
                 patients.append(path)
                 
-                files_in_basepath = basepath.iterdir()
-                for item in files_in_basepath:
-                    if item.is_dir():
-                        if not item.name == '__pycache__':
-                            for elem in item.iterdir():
-                                if "Data" in elem.name:
-                                    data.append(elem)
-                                elif "Segmentation" in elem.name:
-                                    masks.append(elem)
+     files_in_basepath = basepath.iterdir()
+     for item in files_in_basepath:
+         if item.is_dir():
+             if not item.name == '__pycache__':
+                 for elem in item.iterdir():
+                     if "Data" in elem.name:
+                         data.append(elem)
+                     elif "Segmentation" in elem.name:
+                         masks.append(elem)
                                         
                                         
                                         
