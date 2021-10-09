@@ -10,6 +10,36 @@ from pathlib import Path
 import numpy as np
 import tensorflow as tf
 import time
+import argparse
+
+
+def DicomReader(path):
+    reader_dicom = sitk.ImageSeriesReader()
+    reader_dicom.SetImageIO("GDCMImageIO")
+    reader_dicom.MetaDataDictionaryArrayUpdateOn()
+    reader_dicom.LoadPrivateTagsOn()
+    dicom_names = reader_dicom.GetGDCMSeriesFileNames('{}'.format(path))
+    reader_dicom.SetFileNames(dicom_names)
+    image = reader_dicom.Execute()
+    return image, reader_dicom
+
+def NiftiReader(path):
+    reader_nifti = sitk.ImageFileReader()
+    reader_nifti.SetImageIO("NiftiImageIO")
+    reader_nifti.SetFileName('{}'.format(path))
+    reader_nifti.LoadPrivateTagsOn()
+    reader_nifti.ReadImageInformation()
+    image = reader_nifti.Execute()
+    return image, reader_nifti
+
+def NrrdReader(path):
+    reader_nrrd = sitk.ImageFileReader()
+    reader_nrrd.SetImageIO("NrrdImageIO")
+    reader_nrrd.SetFileName('{}'.format(path))
+    reader_nrrd.LoadPrivateTagsOn()
+    reader_nrrd.ReadImageInformation()
+    image = reader_nrrd.Execute()
+    return image, reader_nrrd
 
 
 def DataLoad(data_path, masks_path):
@@ -42,13 +72,7 @@ def DataLoad(data_path, masks_path):
         for item in path.iterdir():
             item_list.append(item.name)
         if any(".dcm" in i for i in item_list):
-            reader_dicom_data = sitk.ImageSeriesReader()
-            reader_dicom_data.SetImageIO("GDCMImageIO")
-            reader_dicom_data.MetaDataDictionaryArrayUpdateOn()
-            reader_dicom_data.LoadPrivateTagsOn()
-            dicom_names = reader_dicom_data.GetGDCMSeriesFileNames('{}'.format(path))
-            reader_dicom_data.SetFileNames(dicom_names)
-            image = reader_dicom_data.Execute()
+            image, reader_dicom_data = DicomReader(path)
             image_array = sitk.GetArrayFromImage(image)
             data_and_labels['features'].append(image)
             data_and_labels_array['features'].append(image_array)
@@ -61,12 +85,7 @@ def DataLoad(data_path, masks_path):
         else:
             for item in path.iterdir():
                 item = str(item)
-                reader_data = sitk.ImageFileReader()
-                reader_data.SetImageIO("NiftiImageIO")
-                reader_data.SetFileName('{}'.format(item))
-                reader_data.LoadPrivateTagsOn()
-                reader_data.ReadImageInformation()
-                image = reader_data.Execute()
+                image, reader_data = NiftiReader(item)
                 image_array = sitk.GetArrayFromImage(image)
                 data_and_labels['features'].append(image)
                 data_and_labels_array['features'].append(image_array)
@@ -81,13 +100,7 @@ def DataLoad(data_path, masks_path):
         for item in path.iterdir():
             item_list.append(item.name)
         if any(".dcm" in i for i in item_list):
-            reader_dicom_masks = sitk.ImageSeriesReader()
-            reader_dicom_masks.SetImageIO("GDCMImageIO")
-            reader_dicom_masks.MetaDataDictionaryArrayUpdateOn()
-            reader_dicom_masks.LoadPrivateTagsOn()
-            dicom_names = reader_dicom_masks.GetGDCMSeriesFileNames('{}'.format(path))
-            reader_dicom_masks.SetFileNames(dicom_names)
-            image = reader_dicom_masks.Execute()
+            image, reader_dicom_masks = DicomReader(path)
             image_array = sitk.GetArrayFromImage(image)
             data_and_labels['labels'].append(image)
             data_and_labels_array['labels'].append(image_array)
@@ -100,12 +113,7 @@ def DataLoad(data_path, masks_path):
         elif any(".nrrd" in i for i in item_list):
             for item in path.iterdir():
                 item = str(item)
-                reader_masks = sitk.ImageFileReader()
-                reader_masks.SetImageIO("NrrdImageIO")
-                reader_masks.SetFileName('{}'.format(item))
-                reader_masks.LoadPrivateTagsOn()
-                reader_masks.ReadImageInformation()
-                image = reader_masks.Execute()
+                image, reader_masks = NrrdReader(item)
                 image_array = sitk.GetArrayFromImage(image)
                 data_and_labels['labels'].append(image)
                 data_and_labels_array['labels'].append(image_array)
@@ -118,12 +126,7 @@ def DataLoad(data_path, masks_path):
         else:
             for item in path.iterdir():
                 item = str(item)
-                reader_masks = sitk.ImageFileReader()
-                reader_masks.SetImageIO("NiftiImageIO")
-                reader_masks.SetFileName('{}'.format(item))
-                reader_masks.LoadPrivateTagsOn()
-                reader_masks.ReadImageInformation()
-                image = reader_masks.Execute()
+                image, reader_masks = NiftiReader(item)
                 image_array = sitk.GetArrayFromImage(image)
                 data_and_labels['labels'].append(image)
                 data_and_labels_array['labels'].append(image_array)
