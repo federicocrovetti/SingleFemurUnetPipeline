@@ -242,8 +242,6 @@ def NIFTISampleWriter(volume_image, ID, new_folder_path, image_and_mask = None, 
     return
 
 
-new_folder_path = Path(r'D:/Fedz/Pattern_Recognition_Project/HipOp_OK_resampled')
-
 
 def TensorflowData(dataset):
     """
@@ -381,6 +379,11 @@ if __name__ == '__main__':
                          data.append(elem)
                      elif "Segmentation" in elem.name:
                          masks.append(elem)
-                                        
+        
+     parser.add_argument('--resample', type = str, help='Path to the new directory onto which the resampled images will be written')
+     args = parser.parse_args()
+     if args.resample:
+         RespaceAndResize(data, masks, Path(args.resample), new_folder_path, new_spacings=None, new_sizes=(280,280,280))
+                                          
                                         
                                         
