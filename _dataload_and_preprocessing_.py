@@ -11,6 +11,7 @@ import numpy as np
 import tensorflow as tf
 import time
 import argparse
+from argparse import RawTextHelpFormatter
 
 
 def DicomReader(path):
@@ -354,11 +355,37 @@ if __name__ == '__main__':
     masks = []
     data_folders = []
     
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description = 
+                                     '''Module for the batch data loading and preprocessing. With optional argument --resample operates a reshaping (deprecated for new versions in favour of greylevel thresholding.
+                                     Take as input a variety of combination of data in the form of Dicom, Nifti and Nrrd.
+                                     Recomended structure for the directory containing the data:
+                                     
+                                     DATA  
+                                         |
+                                         Sample1
+                                             |
+                                             Images
+                                                 |
+                                                     >  ----
+                                             |
+                                             Labels
+                                                 |
+                                                     >  ----
+                                          |
+                                          Sample2
+                                          .
+                                          .
+                                          .
+                                          
+                                         '''
+                                         , formatter_class=RawTextHelpFormatter)
     parser.add_argument('basepath', type = str, help='Path to the working directory in which the data is contained')
+    parser.add_argument('-dl','--dataloader', type = str, #action = 'store_true',
+                        help='Path to the new directory onto which the resampled images will be written')
+    parser.add_argument('-res', '--resample', type = str, #action = 'store_true',
+                        help='Path to the new directory onto which the resampled images will be written')
     args = parser.parse_args()
-    
-    basepath = Path(args.basepath)  
+    basepath = Path(args.basepath) 
     
     
     files_in_basepath = basepath.iterdir()
@@ -370,20 +397,20 @@ if __name__ == '__main__':
                 path = basepath / '{}'.format(item.name)
                 patients.append(path)
                 
-     files_in_basepath = basepath.iterdir()
-     for item in files_in_basepath:
-         if item.is_dir():
-             if not item.name == '__pycache__':
-                 for elem in item.iterdir():
-                     if "Data" in elem.name:
-                         data.append(elem)
-                     elif "Segmentation" in elem.name:
-                         masks.append(elem)
+    files_in_basepath = basepath.iterdir()
+    for item in files_in_basepath:
+        if item.is_dir():
+            if not item.name == '__pycache__':
+                for elem in item.iterdir():
+                    if "Data" in elem.name:
+                        data.append(elem)
+                    elif "Segmentation" in elem.name:
+                        masks.append(elem)
         
-     parser.add_argument('--resample', type = str, help='Path to the new directory onto which the resampled images will be written')
-     args = parser.parse_args()
-     if args.resample:
-         RespaceAndResize(data, masks, Path(args.resample), new_folder_path, new_spacings=None, new_sizes=(280,280,280))
+    if args.dataloader:
+       dataset, dataset_array, metadata_images, metadata_masks = DataLoad(data, masks)
+    if args.resample:
+       RespaceAndResize(data, masks, data_folders, Path(args.resample), new_spacings=None, new_sizes=(280,280,280))
                                           
                                         
                                         
