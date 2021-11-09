@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Sep  3 16:39:08 2021
-
-@author: crove
-"""
-
 """2DUnet"""
 
 
