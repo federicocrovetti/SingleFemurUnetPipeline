@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jul  1 19:40:08 2021
-
-@author: crove
-"""
-
 import SimpleITK as sitk
 from pathlib import Path
 import numpy as np
