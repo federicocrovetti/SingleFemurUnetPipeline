@@ -1,16 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jul  1 20:58:34 2021
-
-@author: crove
-"""
 import numpy as np
 import SimpleITK as sitk
 from pathlib import Path
 from _dataload_and_preprocessing_ import DICOMSampleWriter, NIFTISampleWriter
-
-#OCCHIO CHE DA ADESSO è INCLUSO IL PARAMETRO 'NEW_FOLDER_PATH' IN ENTRAMBI I WRITERS
-
 
 new_folder_path = Path(r'D:/Fedz/Pattern_Recognition_Project/HipOp_OK_resampled')
 
