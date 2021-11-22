@@ -57,10 +57,8 @@ def Crop(dataset, label_sizes, ID, new_folder_path, write_to_folder = None):
         for i in range(len(dataset['features'])):
             data = dataset['features'][i][label_sizes[i][0] : label_sizes[i][1], label_sizes[i][2] : label_sizes[i][3],
                                           label_sizes[i][4] : label_sizes[i][5]]
-            #data = data[0 : data.GetSize()[0], 0 : data.GetSize()[1], 0 : (data.GetSize()[2]/3)]
             labels = dataset['labels'][i][label_sizes[i][0] : label_sizes[i][1], label_sizes[i][2] : label_sizes[i][3],
                                           label_sizes[i][4] : label_sizes[i][5]]
-            #labels = labels[0 : labels.GetSize()[0], 0 : labels.GetSize()[1], 0 : (data.GetSize()[2]/3)]
             dataset_cropped['features'].append(data)
             dataset_cropped['labels'].append(labels)
             
@@ -71,8 +69,7 @@ def Crop(dataset, label_sizes, ID, new_folder_path, write_to_folder = None):
                                           label_sizes[i][4] : label_sizes[i][5]]
             labels = dataset['labels'][i][label_sizes[i][0] : label_sizes[i][1], label_sizes[i][2] : label_sizes[i][3],
                                           label_sizes[i][4] : label_sizes[i][5]]
-            DICOMSampleWriter(data, ID[i], new_folder_path)
-            NIFTISampleWriter(labels, ID[i], new_folder_path, image_and_mask =2)
+            NIFTISampleWriter(data, ID[i], new_folder_path, image_and_mask = 0, volume_mask = labels)
         
         return
 

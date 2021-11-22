@@ -71,8 +71,7 @@ def Padding(dataset, ID, new_path, up_bound, constant = None):
         pad.SetPadUpperBound(up_bound[i])
         pad_img = pad.Execute(dataset['features'][i])
         pad_labels = pad.Execute(dataset['labels'][i])
-        DICOMSampleWriter(pad_img, ID[i], new_path)
-        NIFTISampleWriter(pad_labels, ID[i], new_path, image_and_mask =2)
+        NIFTISampleWriter(pad_img, ID[i], new_path, image_and_mask = 0, volume_mask = pad_labels)
     return 
 
 
