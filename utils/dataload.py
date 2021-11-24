@@ -2,7 +2,6 @@
 
 import SimpleITK as sitk
 from pathlib import Path
-import numpy as np
 import time
 import argparse
 from argparse import RawTextHelpFormatter
@@ -145,25 +144,22 @@ def DataLoad(data_path, masks_path):
     return data_and_labels, data_and_labels_array
 
 
-def DICOMSampleWriter(volume_image, ID, new_folder_path):
+def NIFTISampleWriter(volume_image, volume_mask, ID, new_folder_path):
     """
     Parameters
     ----------
-    
     volume_image : SimpleITK format image
-    ID : string representing the sample's ID (patient's folder in the case of the resampling of a
+    volume_mask : SimpleITK format image
+    ID: string representing the sample's ID (patient's folder in the case of the resampling of a
          pre-existing image or the numerical ID with which to identify the folder of a new patient)
     new_folder_path : the parent folder for the new data
-    
+
     -------
-    Creates a folder with the prefix 'mod', and a subfolder for the features,
-    and writes a DICOM series.
-    
+    Writes a Nifti format image both for data and labels in the folder identified by 'new_folder_path'
+    with the 'mod' prefix
 
     """
-
-    modification_time = time.strftime("%H%M%S")
-    modification_date = time.strftime("%Y%m%d")
+    
     ID = str(ID)
     new_patient_folder = new_folder_path / 'mod{}'.format(ID)
     if new_patient_folder.exists():
@@ -173,78 +169,12 @@ def DICOMSampleWriter(volume_image, ID, new_folder_path):
     
     data_subfolder = new_patient_folder / 'mod{}Data'.format(ID)
     data_subfolder.mkdir(exist_ok=True)
-
-    
-    img_depth = volume_image.GetDepth()
-    writer = sitk.ImageFileWriter()
-    writer.KeepOriginalImageUIDOn()
-    
-    for i in range(img_depth):
-        file = data_subfolder / '00{}.dcm'.format(i)
-        img_slice = volume_image[:,:,i]
-        img_slice.SetMetaData("0020,0032", '\\'.join(map(str,volume_image.TransformIndexToPhysicalPoint((0,0,i))))) # Image Position (Patient)
-        img_slice.SetMetaData("0020,0013", str(i))
-        img_slice.SetMetaData("0010,0010", "Patient^{}^".format(ID))
-        img_slice.SetMetaData("0020|000e", "1.2.826.0.1.3680043.2.1125." + modification_date + ".1" + modification_time)
-        writer.SetFileName('{}'.format(file))
-        writer.Execute(img_slice)
-    return 
-
-
-def NIFTISampleWriter(volume_image, ID, new_folder_path, image_and_mask = None, volume_mask= None):
-    """
-    
-
-    Parameters
-    ----------
-    volume_image : SimpleITK format image
-    ID: string representing the sample's ID (patient's folder in the case of the resampling of a
-         pre-existing image or the numerical ID with which to identify the folder of a new patient)
-    new_folder_path : the parent folder for the new data
-    
-    image_and_mask : if 0 it writes both data and masks in NIFTI format
-                     if 1 it writes only the data in NIFTI format
-                     if >1 it writes only the masks in NIFTI
-    volume_mask : SimpleITK format image (optional)
-    -------
-    Creates a folder with the prefix 'mod', 2 subfolders for the data and the masks,
-    and writes a NIFTI file
-
-    """
-    
-    ID = str(ID)
-    new_patient_folder = new_folder_path / 'mod{}'.format(ID)
-    if new_patient_folder.exists():
-        pass
-    else:
-        new_patient_folder.mkdir(exist_ok=True)
-    
-    if image_and_mask == 0:
-        data_subfolder = new_patient_folder / 'mod{}Data'.format(ID)
-        data_subfolder.mkdir(exist_ok=True)
-        masks_subfolder = new_patient_folder / 'mod{}Segmentation'.format(ID)
-        masks_subfolder.mkdir(exist_ok=True)
-        file = data_subfolder / 'mod{}.nii'.format(ID)
-        sitk.WriteImage(volume_image, '{}'.format(file))
-        new_mask_path = masks_subfolder / 'mod{}.nii'.format(ID)
-        sitk.WriteImage(volume_mask, '{}'.format(new_mask_path))        
-            
-    elif image_and_mask == 1:
-        data_subfolder = new_patient_folder / 'mod{}Data'.format(ID)
-        data_subfolder.mkdir(exist_ok=True)
-
-        file = data_subfolder / 'mod{}.nii'.format(ID)
-        sitk.WriteImage(volume_image, '{}'.format(file))
-        
-    else:    
-        writer = sitk.ImageFileWriter()
-        writer.KeepOriginalImageUIDOn()
-        data_subfolder = new_patient_folder / 'mod{}Segmentation'.format(ID)
-        data_subfolder.mkdir(exist_ok=True)
-
-        file = data_subfolder / 'mod{}.nii'.format(ID)
-        writer.SetFileName('{}'.format(file))
-        writer.Execute(volume_image)
+    masks_subfolder = new_patient_folder / 'mod{}Segmentation'.format(ID)
+    masks_subfolder.mkdir(exist_ok=True)
+    file = data_subfolder / 'mod{}.nii'.format(ID)
+    sitk.WriteImage(volume_image, '{}'.format(file))
+    new_mask_path = masks_subfolder / 'mod{}.nii'.format(ID)
+    sitk.WriteImage(volume_mask, '{}'.format(new_mask_path))        
 
     return
 
