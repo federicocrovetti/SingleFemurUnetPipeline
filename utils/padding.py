@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import argparse
 from argparse import RawTextHelpFormatter
-from dataload import DataLoad, DICOMSampleWriter, NIFTISampleWriter
+from dataload import DataLoad, NIFTISampleWriter
 
 
 def SquareComplete(dataset, req_size):
