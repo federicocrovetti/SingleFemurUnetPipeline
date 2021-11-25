@@ -2,7 +2,6 @@
 
 import SimpleITK as sitk
 from pathlib import Path
-import time
 import argparse
 from argparse import RawTextHelpFormatter
 
@@ -168,11 +167,22 @@ def NIFTISampleWriter(volume_image, volume_mask, ID, new_folder_path):
         new_patient_folder.mkdir(exist_ok=True)
     
     data_subfolder = new_patient_folder / 'mod{}Data'.format(ID)
-    data_subfolder.mkdir(exist_ok=True)
+    
+    if data_subfolder.exists():
+        pass
+    else:
+        data_subfolder.mkdir(exist_ok=True)
+        
     masks_subfolder = new_patient_folder / 'mod{}Segmentation'.format(ID)
-    masks_subfolder.mkdir(exist_ok=True)
-    file = data_subfolder / 'mod{}.nii'.format(ID)
-    sitk.WriteImage(volume_image, '{}'.format(file))
+    
+    if masks_subfolder.exists():
+        pass
+    else:
+        masks_subfolder.mkdir(exist_ok=True)
+        
+    new_data_path = data_subfolder / 'mod{}.nii'.format(ID)
+    sitk.WriteImage(volume_image, '{}'.format(new_data_path))
+    
     new_mask_path = masks_subfolder / 'mod{}.nii'.format(ID)
     sitk.WriteImage(volume_mask, '{}'.format(new_mask_path))        
 
