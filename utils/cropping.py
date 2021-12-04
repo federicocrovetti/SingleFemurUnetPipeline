@@ -31,7 +31,7 @@ def BoundingBox(dataset):
     return bbox_list
 
 
-def Crop(dataset, label_sizes, ID, new_folder_path, write_to_folder = None):
+def Crop(dataset, label_sizes, ID, new_folder_path):
     """
     
 
@@ -41,10 +41,6 @@ def Crop(dataset, label_sizes, ID, new_folder_path, write_to_folder = None):
     label_sizes : list containing the bounding boxes of the objects in dataset
     ID : list containing the names with which the new samples will be named after
     new_folder_path : pathlib path object to the new folder inside which the cropped images will be written into
-    write_to_folder : if FALSE the function won't write the cropped images into the folder at 'new_folder_path' but
-                        will return a dict type object with 'features' and 'labels' as keys containins sitk.Image objects
-                        
-                      if TRUE doesn't return anything and write directly the images into the specified folder
 
     Returns
     -------
@@ -52,28 +48,16 @@ def Crop(dataset, label_sizes, ID, new_folder_path, write_to_folder = None):
                       the cropped images and labels
 
     """
-    if write_to_folder == False:
-        dataset_cropped =  {'features': [], 'labels':[]}
-        for i in range(len(dataset['features'])):
-            data = dataset['features'][i][label_sizes[i][0] : label_sizes[i][1], label_sizes[i][2] : label_sizes[i][3],
+    
+    for i in range(len(dataset['features'])):
+        data = dataset['features'][i][label_sizes[i][0] : label_sizes[i][1], label_sizes[i][2] : label_sizes[i][3],
                                           label_sizes[i][4] : label_sizes[i][5]]
-            labels = dataset['labels'][i][label_sizes[i][0] : label_sizes[i][1], label_sizes[i][2] : label_sizes[i][3],
+        labels = dataset['labels'][i][label_sizes[i][0] : label_sizes[i][1], label_sizes[i][2] : label_sizes[i][3],
                                           label_sizes[i][4] : label_sizes[i][5]]
-            dataset_cropped['features'].append(data)
-            dataset_cropped['labels'].append(labels)
-            
-        return dataset_cropped
-    else:
-        for i in range(len(dataset['features'])):
-            data = dataset['features'][i][label_sizes[i][0] : label_sizes[i][1], label_sizes[i][2] : label_sizes[i][3],
-                                          label_sizes[i][4] : label_sizes[i][5]]
-            labels = dataset['labels'][i][label_sizes[i][0] : label_sizes[i][1], label_sizes[i][2] : label_sizes[i][3],
-                                          label_sizes[i][4] : label_sizes[i][5]]
-            NIFTISampleWriter(data, ID[i], new_folder_path, image_and_mask = 0, volume_mask = labels)
+        NIFTISampleWriter(data, ID[i], new_folder_path, image_and_mask = 0, volume_mask = labels)
         
-        return
-
-
+        return 
+    
 
 
 if __name__ == '__main__':
