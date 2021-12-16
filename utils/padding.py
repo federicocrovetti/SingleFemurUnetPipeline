@@ -20,7 +20,7 @@ def SquareComplete(dataset, req_size):
 
     Returns
     -------
-    pad_sizes : list of lists with the necessary padding sizes
+    pad_sizes : list of lists with the necessary padding sizes for the images to have the required sizes
 
     """
     if len(req_size) == 2:
