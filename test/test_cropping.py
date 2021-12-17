@@ -46,6 +46,7 @@ def test_Crop(datasets, label_sizess, IDs, new_folder_paths):
     dataset['features'].append(images)
     dataset['labels'].append(images)
     label_sizes = label_sizess
+    image_size = [label_sizes[1] - label_sizes[0], label_sizes[3] - label_sizes[2], label_sizes[5] - label_sizes[4]]
     ID = IDs
     new_folder_path = working_directory_path / Path('{}'.format(new_folder_paths))
     
@@ -58,8 +59,12 @@ def test_Crop(datasets, label_sizess, IDs, new_folder_paths):
     assert (datasets['labels'][0].GetDirection() == pytest.approx(mask.GetDirection()))
     assert (datasets['features'][0].GetSpacing() == pytest.approx(image.GetSpacing()))
     assert (datasets['labels'][0].GetSpacing() == pytest.approx(mask.GetSpacing()))
-    assert(datasets['features'][0].GetSize() == image.GetSize())
-    assert(datasets['labels'][0].GetSize() == mask.GetSize())
+    assert(image_size[0] == image.GetSize()[0])
+    assert(image_size[1] == image.GetSize()[1])
+    assert(image_size[2] == image.GetSize()[2])
+    assert(image_size[0] == mask.GetSize()[0])
+    assert(image_size[1] == mask.GetSize()[1])
+    assert(image_size[2] == mask.GetSize()[2])
 
 
 
