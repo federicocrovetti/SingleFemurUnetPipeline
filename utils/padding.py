@@ -144,7 +144,7 @@ if __name__ == '__main__':
     files_in_basepath = basepath.iterdir()
     for item in files_in_basepath:
         if item.is_dir():
-            if not item.name == '__pycache__':
+            if not item.name == '__pycache__' and not item.name == '.hypothesis':
                 print(item.name)
                 data_folders.append(item.name)
                 path = basepath / '{}'.format(item.name)
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     files_in_basepath = basepath.iterdir()
     for item in files_in_basepath:
         if item.is_dir():
-            if not item.name == '__pycache__':
+            if not item.name == '__pycache__' and not item.name == '.hypothesis':
                 for elem in item.iterdir():
                     if "Data" in elem.name:
                         data.append(elem)
