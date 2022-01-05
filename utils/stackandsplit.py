@@ -7,25 +7,31 @@ def StackedData(data):
 
     Parameters
     ----------
-    data : dict type object containing the images and the corresponding masks in a numpy array form
+    data : dict type object, with keys 'features' and 'labels', containing the images and the corresponding 
+    masks as lists of numpy arrays
+    
+    Raises
+    ------
+    ValueError if the argument doesn't all of the characteristics listed above
 
     Returns
     -------
     stacked : dict type object containing a numpy array which groups the data passed to the function
 
     """
-    
     if type(data) is dict:
         stacked = {'features': [], 'labels':[]}
-        values = list(data.values())
-        for i in range(len(values[0])):
-            stacked['features'].append(values[0][i])
-            stacked['labels'].append(values[1][i])
+        for i in range(len(data['features'])):
+            for j in range(len(data['features'][i][0, 0, :])):
+                stacked['features'].append(data['features'][i][:,:,j])
+                
+        for i in range(len(data['labels'])):
+            for j in range(len(data['labels'][i][0, 0, :])):
+                stacked['labels'].append(data['labels'][i][:,:,j])
         
         return stacked
     else:
-        raise ValueError("A dict type object with 2 keys was expected, a {} was given instead".format(type(data)))
-
+        raise ValueError("A dict type object with 2 keys was expected, a/an {} was given instead".format(type(data)))
 
 def Split(data, train_percent, val_percent, test_percent):
     """
