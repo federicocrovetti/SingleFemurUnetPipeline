@@ -1,5 +1,6 @@
 #dataload
 
+import numpy as np
 import SimpleITK as sitk
 from pathlib import Path
 import argparse
@@ -100,6 +101,7 @@ def DataLoad(data_path, masks_path):
         if any(".dcm" in i for i in item_list):
             image , reader_dicom_data = DicomReader(path)
             image_array = sitk.GetArrayFromImage(image)
+            image_array = np.transpose(image_array, axes=[1, 2, 0])
             data_and_labels['features'].append(image)
             data_and_labels_array['features'].append(image_array)
             
@@ -108,6 +110,7 @@ def DataLoad(data_path, masks_path):
                 item = str(item)
                 image, reader_data = NiftiReader(item)
                 image_array = sitk.GetArrayFromImage(image)
+                image_array = np.transpose(image_array, axes=[1, 2, 0])
                 data_and_labels['features'].append(image)
                 data_and_labels_array['features'].append(image_array)
             
@@ -119,6 +122,7 @@ def DataLoad(data_path, masks_path):
         if any(".dcm" in i for i in item_list):
             image , reader_dicom_masks = DicomReader(path)
             image_array = sitk.GetArrayFromImage(image)
+            image_array = np.transpose(image_array, axes=[1, 2, 0])
             data_and_labels['labels'].append(image)
             data_and_labels_array['labels'].append(image_array)
         
@@ -128,6 +132,7 @@ def DataLoad(data_path, masks_path):
                 item = str(item)
                 image, reader_masks = NrrdReader(item)
                 image_array = sitk.GetArrayFromImage(image)
+                image_array = np.transpose(image_array, axes=[1, 2, 0])
                 data_and_labels['labels'].append(image)
                 data_and_labels_array['labels'].append(image_array)                              
                     
@@ -136,6 +141,7 @@ def DataLoad(data_path, masks_path):
                 item = str(item)
                 image, reader_masks = NiftiReader(item)
                 image_array = sitk.GetArrayFromImage(image)
+                image_array = np.transpose(image_array, axes=[1, 2, 0])
                 data_and_labels['labels'].append(image)
                 data_and_labels_array['labels'].append(image_array)
 
