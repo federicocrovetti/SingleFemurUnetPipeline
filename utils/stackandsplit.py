@@ -64,13 +64,13 @@ def Split(data, train_percent, val_percent, test_percent):
     test_split = tot_samples*test_percent
     
     for i in range(len(train_split)):
-        train_data['features'][i] = stacked_data['features'][i]
-        train_data['labels'][i] = stacked_data['labels'][i]
+        train_data['features'].append(stacked_data['features'][i])
+        train_data['labels'].append(stacked_data['labels'][i])
     for i in range(len(val_split)):
-        val_data['features'][train_split + i] = stacked_data['features'][train_split + i]
-        val_data['labels'][train_split + i] = val_data['labels'][train_split + i]
+        val_data['features'].append(stacked_data['features'][(train_split + i)])
+        val_data['labels'].append(stacked_data['labels'][(train_split + i)])
     for i in range(len(test_split)):
-        test_data['features'][train_split + val_split + i] = stacked_data['features'][train_split + val_split + i]
-        test_data['labels'][train_split + val_split + i] = test_data['labels'][train_split + val_split + i]
+        test_data['features'].append(stacked_data['features'][(train_split + val_split + i)])
+        test_data['labels'].append(stacked_data['labels'][(train_split + val_split + i)])
     
     return train_data, val_data, test_data
