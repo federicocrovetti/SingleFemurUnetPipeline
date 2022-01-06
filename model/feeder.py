@@ -21,16 +21,14 @@ class ImageFeeder(tf.keras.utils.Sequence):
         batch_input_data = self.features_dataset[i : i + self.batch_size]
         batch_labels_data = self.labels_dataset[i : i + self.batch_size]
         x = np.zeros((self.batch_size,) + self.img_size + (1,), dtype="uint8")
-        #L'ordine è strano, ma compatibile con quello che sitk.getarray ritorna: (z, y, x), dove la batch
-        #è ovviamente presa lungo z
         for j in range(len(batch_input_data)):
-            #img = np.expand_dims(batch_input_data[j], axis=2) #EXPAND DIMS SEMBRA DI TROPPO
             img = batch_input_data[j]
+            img = np.expand_dims(img, axis=2)
             x[j] = img
         y = np.zeros((self.batch_size,) + self.img_size + (1,), dtype="uint8")
         for j in range(len(batch_labels_data)):
-            #label = np.expand_dims(batch_labels_data[j], axis=2) #EXPAND DIMS SEMBRA DI TROPPO
             label = batch_labels_data[j]
+            label = np.expand_dims(label, axis=2)
             y[j] = label
         return x, y
     
