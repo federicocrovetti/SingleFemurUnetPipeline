@@ -1,5 +1,32 @@
 # -*- coding: utf-8 -*-
 #stacking + splitting
+import numpy as np
+
+def NormDict(data):
+    """
+    
+    Parameters
+    ----------
+    data : dict type object, with keys 'features' and 'labels', containing the images and the corresponding 
+    masks as lists of numpy arrays
+
+    Returns
+    -------
+    norm : dict type object of the same kind of the input 'data', where each array has values in the [0,1] range
+
+    """
+    norm = {'features': [], 'labels':[]}
+    for i in range(len(data ['features'])):
+        shift = (data['features'][i] + abs(np.min(data['features'][i])))
+        norm_data = np.divide(shift, np.max(shift))
+        norm['features'].append(norm_data)
+    for i in range(len(data ['labels'])):
+        shift = (data['labels'][i] + abs(np.min(data['labels'][i])))
+        norm_data = np.divide(shift, np.max(shift))
+        norm['labels'].append(norm_data)
+    
+    return norm    
+
 
 def StackedData(data):
     """
@@ -53,6 +80,7 @@ def Split(data, train_percent, val_percent, test_percent):
     if (train_percent + val_percent + test_percent) != 1:
         raise ValueError('The dataset splitting does not add up to 1')
     stacked_data = StackedData(data)
+    stacked_data = NormDict(stacked_data)
         
     train_data = {'features': [], 'labels':[]}
     val_data = {'features': [], 'labels':[]}
