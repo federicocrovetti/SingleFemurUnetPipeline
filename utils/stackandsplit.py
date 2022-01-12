@@ -87,9 +87,9 @@ def Split(data, train_percent, val_percent, test_percent):
     test_data = {'features': [], 'labels':[]}
     
     tot_samples = len(stacked_data['features'])
-    train_split = tot_samples*train_percent
-    val_split = tot_samples*val_percent
-    test_split = tot_samples*test_percent
+    train_split = round(tot_samples*train_percent)
+    val_split = round(tot_samples*val_percent)
+    test_split = round(tot_samples*test_percent)
     
     for i in range(train_split):
         train_data['features'].append(stacked_data['features'][i])
