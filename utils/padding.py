@@ -164,4 +164,4 @@ if __name__ == '__main__':
     dataset, dataset_array= DataLoad(data, masks)
     
     pad_sizes = SquareComplete(dataset, req_size)
-    Padding(dataset, ID, new_folder_path, pad_sizes, constant = np.min(dataset['features'][0]))
+    Padding(dataset, ID, new_folder_path, pad_sizes, constant = np.min(dataset_array['features'][0]))
