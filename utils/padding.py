@@ -67,6 +67,7 @@ def Padding(dataset, ID, new_path, up_bound, constant = None):
     
     for i in range(len(dataset['features'])):
         pad = sitk.ConstantPadImageFilter()
+        pad.SetConstant(int(constant))
         print(type(up_bound))
         pad.SetPadUpperBound(up_bound[i])
         pad_img = pad.Execute(dataset['features'][i])
