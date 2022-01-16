@@ -71,6 +71,8 @@ def Padding(dataset, ID, new_path, up_bound, constant = None):
         print(type(up_bound))
         pad.SetPadUpperBound(up_bound[i])
         pad_img = pad.Execute(dataset['features'][i])
+        pad.SetConstant(0)
+        pad.SetPadUpperBound(up_bound[i])
         pad_labels = pad.Execute(dataset['labels'][i])
         NIFTISampleWriter(pad_img, pad_labels, ID[i], new_path)
     return 
