@@ -21,9 +21,7 @@ def NormDict(data):
         norm_data = np.divide(shift, np.max(shift))
         norm['features'].append(norm_data)
     for i in range(len(data ['labels'])):
-        shift = (data['labels'][i] + abs(np.min(data['labels'][i])))
-        norm_data = np.divide(shift, np.max(shift))
-        norm['labels'].append(norm_data)
+        norm['labels'].append(data['labels'][i])
     
     return norm    
 
