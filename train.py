@@ -100,7 +100,7 @@ if __name__ == '__main__':
     del dataset_array
 
     train_dst = ImageFeeder(args.batch_size, args.img_size, datatrain['features'], datatrain['labels'])
-    val_dst = ImageFeeder(args.batch_size, args.img_size, dataval['features'], dataval['features'])
+    val_dst = ImageFeeder(args.batch_size, args.img_size, dataval['features'], dataval['labels'])
     
     tf.keras.backend.clear_session()
     model = model2D(args.img_size, 2)
