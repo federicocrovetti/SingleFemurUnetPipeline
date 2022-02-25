@@ -17,9 +17,9 @@ class PredictionDataFeeder(tf.keras.utils.Sequence):
         """Returns tuple (input, target) correspond to batch #idx."""
         i = idx * self.batch_size
         batch_input_data = self.features_dataset[i : i + self.batch_size]
-        x = np.zeros((self.batch_size,) + self.img_size + (1,), dtype="uint8")
+        x = np.zeros((self.batch_size,) + self.img_size + (1,), dtype="float32")
         for j in range(len(batch_input_data)):
             img = batch_input_data[j]
-            img = np.expand_dims(img, axis=2)
+            img = np.expand_dims(img, axis=-1)
             x[j] = img
         return x

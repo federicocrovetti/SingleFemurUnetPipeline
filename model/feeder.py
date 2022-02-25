@@ -23,12 +23,12 @@ class ImageFeeder(tf.keras.utils.Sequence):
         x = np.zeros((self.batch_size,) + self.img_size + (1,), dtype="float32")
         for j in range(len(batch_input_data)):
             img = batch_input_data[j]
-            img = np.expand_dims(img, axis=2)
+            img = np.expand_dims(img, axis=-1)
             x[j] = img
         y = np.zeros((self.batch_size,) + self.img_size + (1,), dtype="float32")
         for j in range(len(batch_labels_data)):
             label = batch_labels_data[j]
-            label = np.expand_dims(label, axis=2)
+            label = np.expand_dims(label, axis=-1)
             y[j] = label
         return x, y
     
