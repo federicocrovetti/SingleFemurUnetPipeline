@@ -103,14 +103,29 @@ if __name__ == '__main__':
     val_dst = ImageFeeder(args.batch_size, args.img_size, dataval['features'], dataval['labels'])
     
     tf.keras.backend.clear_session()
-    model = model2D(args.img_size, 2)
+    model = model2D(args.img_size, 1)
     model.summary()
-    model.compile(optimizer="Adam", loss="binary_crossentropy",  metrics=['accuracy', 'binary_accuracy', 'categorical_accuracy']) 
+    import tensorflow.keras.backend as K
+    
+    lr = 1e-3
+    smooth = 1e-6
+
+    def dice_coef(y_true, y_pred):
+        y_true_f = K.flatten(y_true)
+        y_pred_f = K.flatten(y_pred)
+        prod = y_true_f * y_pred_f
+        intersection = tf.experimental.numpy.sum(prod)
+        return (2. * intersection + smooth) / (tf.experimental.numpy.sum(y_true_f) + tf.experimental.numpy.sum(y_pred_f) + smooth)
+
+    def dice_coef_loss(y_true, y_pred):
+        return 1 - dice_coef(y_true, y_pred)
+    
+    model.compile(optimizer=tf.keras.optimizers.Adam(lr), loss=dice_coef_loss,  metrics=[dice_coef]) 
     
     checkpoint_filepath = Path(args.ckptfile)
     callbacks = [
     tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_filepath,
-    save_weights_only=True, monitor='val_accuracy',
+    save_weights_only=True, monitor='val_dice_coef',
     mode='max', save_best_only=True)
     ]
     

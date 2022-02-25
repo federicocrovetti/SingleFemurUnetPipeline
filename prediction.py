@@ -10,15 +10,25 @@ from dataload import DataLoad
 from prediction_feeder import PredictionDataFeeder
 from stackandsplit import NormDict, StackedData
 from IPython.display import display
+import tensorflow.keras.backend as K
 
 
 def display_mask(i):
-    mask = np.argmax(val_preds[i], axis=-1)
-    mask = np.expand_dims(mask, axis=-1)
+    mask = val_preds[i]
     img = tf.keras.preprocessing.image.array_to_img(mask)
     display(img)
 
+smooth = 1e-6
 
+def dice_coef(y_true, y_pred):
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    prod = y_true_f * y_pred_f
+    intersection = tf.experimental.numpy.sum(prod)
+    return (2. * intersection + smooth) / (tf.experimental.numpy.sum(y_true_f) + tf.experimental.numpy.sum(y_pred_f) + smooth)
+
+def dice_coef_loss(y_true, y_pred):
+    return 1 - dice_coef(y_true, y_pred)
 
 if __name__ == '__main__':
     
@@ -79,7 +89,7 @@ if __name__ == '__main__':
     data = StackedData(data_array)
     del(data_array)
     
-    model = tf.keras.models.load_model('{}'.format(args.network))
+    model = tf.keras.models.load_model('{}'.format(args.network), custom_objects= {'dice_coef_loss' : dice_coef_loss, 'dice_coef': dice_coef})
     
     test_gen = PredictionDataFeeder(args.batch_size, args.img_size, data['features'])
     val_preds = model.predict(test_gen)
