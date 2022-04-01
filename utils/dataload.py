@@ -194,6 +194,40 @@ def NIFTISampleWriter(volume_image, volume_mask, ID, new_folder_path):
 
     return
 
+def NIFTISingleSampleWriter(volume_image, ID, new_folder_path):
+    """
+    Parameters
+    ----------
+    volume_image : SimpleITK format image
+    ID: string representing the sample's ID (patient's folder in the case of the resampling of a
+         pre-existing image or the numerical ID with which to identify the folder of a new patient)
+    new_folder_path : the parent folder for the new data
+
+    -------
+    Writes a Nifti format image both for data in the folder identified by 'new_folder_path'
+    with the 'mod' prefix
+
+    """
+    
+    ID = str(ID)
+    new_patient_folder = new_folder_path / 'mod{}'.format(ID)
+    if new_patient_folder.exists():
+        pass
+    else:
+        new_patient_folder.mkdir(exist_ok=True)
+    
+    data_subfolder = new_patient_folder / 'mod{}Data'.format(ID)
+    
+    if data_subfolder.exists():
+        pass
+    else:
+        data_subfolder.mkdir(exist_ok=True)
+
+        
+    new_data_path = data_subfolder / 'mod{}.nii'.format(ID)
+    sitk.WriteImage(volume_image, '{}'.format(new_data_path))      
+
+    return
 
 if __name__ == '__main__':
     
