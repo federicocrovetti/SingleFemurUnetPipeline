@@ -275,14 +275,17 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = True, tra
                         data = dataset['features'][j][:, :, i][:, int(y_min) : int(y_max)]
                         labels = dataset['labels'][j][:, :, i][:, int(y_min) : int(y_max)] 
                     elif y_min >= 0 and y_max > 512:
-                        data = dataset['features'][j][:, :, i][:, y_min : 512]
-                        labels = dataset['labels'][j][:, :, i][:, y_min : 512] 
+                        data = dataset['features'][j][:, :, i][:, (y_min - y_max -512) : 512]
+                        labels = dataset['labels'][j][:, :, i][:, (y_min - y_max -512) : 512]
                     elif y_min < 0 and y_max <= 512:
-                        data = dataset['features'][j][:, :, i][:, 0 : y_max]
-                        labels = dataset['labels'][j][:, :, i][:, 0 : y_max] 
+                        data = dataset['features'][j][:, :, i][:, 0 : (y_max + np.abs(y_min + 512))]
+                        labels = dataset['labels'][j][:, :, i][:, 0 : (y_max + np.abs(y_min + 512))]
                     elif y_min < 0 and y_max > 512:
                         ValueError('The input image is over 512 pixels in size on the y axis')
-                                    
+                        
+                        
+                    data.SetOrigin([-9.1640584e+01, -1.8851562e+02])    
+                    labels.SetOrigin([-9.1640584e+01, -1.8851562e+02])                  
                     cropped['features'].append(data)
                     cropped['labels'].append(labels)
                     
@@ -294,8 +297,11 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = True, tra
                 crop_pad['features'].append(pad_img)
                 crop_pad['labels'].append(pad_labels)
             join = sitk.JoinSeriesImageFilter()
+            join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
             crop_pad_volume = join.Execute([crop_pad['features'][k] for k in range(len(crop_pad['features']))])
             crop_pad_labels = join.Execute([crop_pad['labels'][k] for k in range(len(crop_pad['labels']))])
+            MDTransfer(dataset['features'][j], crop_pad_volume)
+            MDTransfer(dataset['labels'][j], crop_pad_labels)
             dataset_cropped['features'].append(crop_pad_volume)
             dataset_cropped['labels'].append(crop_pad_labels)
             
@@ -315,15 +321,16 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = True, tra
                         data = dataset['features'][j][:, :, i][:, int(y_min) : int(y_max)]
                         labels = dataset['labels'][j][:, :, i][:, int(y_min) : int(y_max)] 
                     elif y_min >= 0 and y_max > 512:
-                        data = dataset['features'][j][:, :, i][:, y_min : 512]
-                        labels = dataset['labels'][j][:, :, i][:, y_min : 512] 
+                        data = dataset['features'][j][:, :, i][:, (y_min - y_max -512) : 512]
+                        labels = dataset['labels'][j][:, :, i][:, (y_min - y_max -512) : 512] 
                     elif y_min < 0 and y_max <= 512:
-                        data = dataset['features'][j][:, :, i][:, 0 : y_max]
-                        labels = dataset['labels'][j][:, :, i][:, 0 : y_max]
+                        data = dataset['features'][j][:, :, i][:, 0 : (y_max + np.abs(y_min + 512))]
+                        labels = dataset['labels'][j][:, :, i][:, 0 : (y_max + np.abs(y_min + 512))]
                     elif y_min < 0 and y_max > 512:
                         ValueError('The input image is over 512 pixels in size on the y axis')
                     
-                                    
+                    data.SetOrigin([-9.1640584e+01, -1.8851562e+02])    
+                    labels.SetOrigin([-9.1640584e+01, -1.8851562e+02])               
                     cropped['features'].append(data)
                     cropped['labels'].append(labels)
            
@@ -335,8 +342,11 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = True, tra
                 crop_pad['features'].append(pad_img)
                 crop_pad['labels'].append(pad_labels)
             join = sitk.JoinSeriesImageFilter()
+            join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
             crop_pad_volume = join.Execute([crop_pad['features'][k] for k in range(len(crop_pad['features']))])
             crop_pad_labels = join.Execute([crop_pad['labels'][k] for k in range(len(crop_pad['labels']))])
+            MDTransfer(dataset['features'][j], crop_pad_volume)
+            MDTransfer(dataset['labels'][j], crop_pad_labels)
             
             NIFTISampleWriter(crop_pad_volume, crop_pad_labels, ID[j], new_folder_path)
         
@@ -356,13 +366,13 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = True, tra
                     if y_min >= 0 and y_max <= 512:
                         data = dataset['features'][j][:, :, i][:, int(y_min) : int(y_max)]
                     elif y_min >= 0 and y_max > 512:
-                        data = dataset['features'][j][:, :, i][:, y_min : 512]
+                        data = dataset['features'][j][:, :, i][:, (y_min - y_max -512) : 512]
                     elif y_min < 0 and y_max <= 512:
-                        data = dataset['features'][j][:, :, i][:, 0 : y_max]
+                        data = dataset['features'][j][:, :, i][:, 0 : (y_max + np.abs(y_min + 512))]
                     elif y_min < 0 and y_max > 512:
                         ValueError('The input image is over 512 pixels in size on the y axis')
                                                       
-                                    
+                    data.SetOrigin([-9.1640584e+01, -1.8851562e+02])               
                     cropped['features'].append(data)
                     
             sqcmplt = SquareComplete(cropped, (256,256))  
@@ -372,7 +382,9 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = True, tra
                 pad_img = Padding(data, compleat_measure, train = False)
                 crop_pad['features'].append(pad_img)
             join = sitk.JoinSeriesImageFilter()
+            join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
             crop_pad_volume = join.Execute([crop_pad['features'][k] for k in range(len(crop_pad['features']))])
+            MDTransfer(dataset['features'][j], crop_pad_volume)
             dataset_cropped['features'].append(crop_pad_volume)
             
         return dataset_cropped
@@ -390,13 +402,13 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = True, tra
                     if y_min >= 0 and y_max <= 512:
                         data = dataset['features'][j][:, :, i][:, int(y_min) : int(y_max)]
                     elif y_min >= 0 and y_max > 512:
-                        data = dataset['features'][j][:, :, i][:, y_min : 512]
+                        data = dataset['features'][j][:, :, i][:, (y_min - y_max -512) : 512]
                     elif y_min < 0 and y_max <= 512:
-                        data = dataset['features'][j][:, :, i][:, 0 : y_max]
+                        data = dataset['features'][j][:, :, i][:, 0 : (y_max + np.abs(y_min + 512))]
                     elif y_min < 0 and y_max > 512:
                         ValueError('The input image is over 512 pixels in size on the y axis')
                     
-                                    
+                    data.SetOrigin([-9.1640584e+01, -1.8851562e+02])               
                     cropped['features'].append(data)
            
             sqcmplt = SquareComplete(cropped, (256,256))  
@@ -406,7 +418,9 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = True, tra
                 pad_img = Padding(data, compleat_measure, train = False)
                 crop_pad['features'].append(pad_img)
             join = sitk.JoinSeriesImageFilter()
+            join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
             crop_pad_volume = join.Execute([crop_pad['features'][k] for k in range(len(crop_pad['features']))])
+            MDTransfer(dataset['features'][j], crop_pad_volume)
             NIFTISingleSampleWriter(crop_pad_volume, ID[j], new_folder_path)
         
         return
