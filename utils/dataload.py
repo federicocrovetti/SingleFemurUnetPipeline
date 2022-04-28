@@ -229,6 +229,26 @@ def NIFTISingleSampleWriter(volume_image, ID, new_folder_path):
 
     return
 
+def MDTransfer(in_image, out_image):
+    """
+
+    Parameters
+    ----------
+    in_image : SimpleITK image from which origin, direction and spacing will be copied
+    out_image : SimpleITK image onto which origin, direction and spacing will be pasted
+
+    """
+    origin = in_image.GetOrigin()
+    direction = in_image.GetDirection()
+    spacing = in_image.GetSpacing()
+    
+    out_image.SetOrigin(origin)
+    out_image.SetDirection(direction)
+    out_image.SetSpacing(spacing)
+    
+    return 
+
+
 if __name__ == '__main__':
     
     patients = []
