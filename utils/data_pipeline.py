@@ -171,13 +171,28 @@ def BoundingBox(dataset):
         for j in range(int(dataset['features'][i].GetSize()[2])):
             if any(dataset['features'][int(i)][:, :,j]): #any returns True if it sees 1    #ho cambiato labels con features
                 crpfilter.Execute(dataset['features'][i][:, :, j], dataset['features'][i][:, :, j])    
-                boundingbox = np.array(crpfilter.GetBoundingBox(1))
-                vol_box.append(boundingbox)
-            else:
-                vol_box.append([7000, 70000, 7000, 7000])
-                #7000 è un dummy value che segnala che sulla slice non sono presenti zone labellate
+                boundingbox = crpfilter.GetBoundingBox(1)#np.array(crpfilter.GetBoundingBox(1))
                 
+                y_min = round(((boundingbox[3] - boundingbox[2])//2) + boundingbox[2] - 128)
+                y_max = round(((boundingbox[3] - boundingbox[2])//2) + boundingbox[2] + 128)
+                
+                if y_min >= 0 and y_max <= 512:
+                    vol_box.append(np.array([boundingbox[0], boundingbox[1], boundingbox[2], boundingbox[3],y_min, y_max]))
+                elif y_min >= 0 and y_max > 512:
+                    y_min = (y_min - y_max -512)
+                    y_max = 512
+                    vol_box.append(np.array([boundingbox[0], boundingbox[1], boundingbox[2], boundingbox[3],y_min, y_max]))
+                elif y_min < 0 and y_max <= 512:
+                    y_min = 0
+                    y_max = (y_max + np.abs(y_min + 512))
+                    vol_box.append(np.array([boundingbox[0], boundingbox[1], boundingbox[2], boundingbox[3],y_min, y_max]))
+                elif y_min < 0 and y_max > 512:
+                    ValueError('The input image is over 512 pixels in size on the y axis')
+                
+            else:
+                vol_box.append([7000, 7000, 7000, 7000, 7000, 7000])
         bbox_grouped.append(vol_box)
+        
     return bbox_grouped 
 
 
