@@ -1,4 +1,5 @@
 import SimpleITK as sitk
+import csv
 import argparse
 from argparse import RawTextHelpFormatter
 import numpy as np
@@ -488,6 +489,11 @@ if __name__ == '__main__':
                         type = str, 
                         help='True when we have labels (training phase), False when we do not. The default is True.')
     
+    parser.add_argument('--bbox_csv',
+                        metavar = 'bbox_csv', 
+                        type = str,
+                        help='Optional argument that allows to individuate the path of the CSV file into which the bounding box coordinates will be written')
+    
     
     args = parser.parse_args() 
     
@@ -536,4 +542,12 @@ if __name__ == '__main__':
     
     thresh_dst = Thresholding(halve_dst, [args.low_end_threshold, args.high_end_threshold])
     label_sizes = BoundingBox(thresh_dst)
+    
     Crop(halve_dst, label_sizes, ID, new_folder_path, write_to_folder = args.write_to_folder, train = args.train)
+    
+    if args.bbox_csv is not None:
+        with open(Path('{}'.format(args.bbox_csv)), 'w', newline='', encoding='UTF8') as f:
+            writer = csv.writer(f, delimiter=',')
+            for i in range(len(label_sizes)):
+                for j in range(len(label_sizes[i])):
+                    writer.writerow(label_sizes[i][j])
