@@ -3,8 +3,8 @@ import argparse
 from argparse import RawTextHelpFormatter
 import numpy as np
 from pathlib import Path
-from dataload import DataLoad, NIFTISampleWriter, NIFTISingleSampleWriter
-from padding import SquareComplete
+from dataload import DataLoad, NIFTISampleWriter, NIFTISingleSampleWriter, MDTransfer
+from square_complete import SquareComplete
 
 
 def Halve(dataset, side, train = True):
@@ -28,9 +28,11 @@ def Halve(dataset, side, train = True):
         for i in range(len(dataset['features'])):
             if side[i] == 0:
                 data = dataset['features'][i][0 : 256, 0 : 512]
+                MDTransfer(dataset['features'][i], data)
                 dataset_cropped['features'].append(data)
             else:
                 data = dataset['features'][i][256 : 512, 0 : 512]
+                MDTransfer(dataset['features'][i], data)
                 dataset_cropped['features'].append(data)
         return dataset_cropped
     else:
@@ -38,14 +40,20 @@ def Halve(dataset, side, train = True):
         for i in range(len(dataset['features'])):
             if side[i] == 0:
                 data = dataset['features'][i][0 : 256, 0 : 512]
+                MDTransfer(dataset['features'][i], data)
                 labels = dataset['labels'][i][0 : 256, 0 : 512]
+                MDTransfer(dataset['labels'][i], labels)
+                dataset_cropped['features'].append(data)
+                dataset_cropped['labels'].append(labels)
+            elif side[i] == 1:
+                data = dataset['features'][i][256 : 512, 0 : 512]
+                MDTransfer(dataset['features'][i], data)
+                labels = dataset['labels'][i][256 : 512, 0 : 512]
+                MDTransfer(dataset['labels'][i], labels)
                 dataset_cropped['features'].append(data)
                 dataset_cropped['labels'].append(labels)
             else:
-                data = dataset['features'][i][256 : 512, 0 : 512]
-                labels = dataset['labels'][i][256 : 512, 0 : 512]
-                dataset_cropped['features'].append(data)
-                dataset_cropped['labels'].append(labels)
+                raise Exception('Cannot recognize if the leg intended is the right or left one. Please insert L or R in the folder name accordingly.')
                 
         return dataset_cropped
 
@@ -81,6 +89,7 @@ def BedRemoval(dataset, train = True):
             mask = sitk.MaskImageFilter()
             mask.SetOutsideValue(-3000)
             nobed_image = mask.Execute(dataset['features'][i], bin_eroded)
+            MDTransfer(dataset['features'][i], nobed_image)
             data['features'].append(nobed_image)
     else:
         data = {'features' : [], 'labels' : []}
@@ -93,6 +102,7 @@ def BedRemoval(dataset, train = True):
             mask = sitk.MaskImageFilter()
             mask.SetOutsideValue(-3000)
             nobed_image = mask.Execute(dataset['features'][i], bin_eroded)
+            MDTransfer(dataset['features'][i], nobed_image)
             data['features'].append(nobed_image)
             data['labels'].append(dataset['labels'][i])
             
@@ -125,11 +135,13 @@ def Thresholding(dataset, threshold, train = True):
         data = {'features' : []}
         for i in range(len(dataset['features'])):
             image = thresh.Execute(dataset['features'][i])
+            MDTransfer(dataset['features'][i], image)
             data['features'].append(image)
     else:
         data = {'features' : [], 'labels' : []}
         for i in range(len(dataset['features'])):
             image = thresh.Execute(dataset['features'][i])
+            MDTransfer(dataset['features'][i], image)
             data['features'].append(image)
             data['labels'].append(dataset['labels'][i])
     
