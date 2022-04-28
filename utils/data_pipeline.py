@@ -157,8 +157,9 @@ def BoundingBox(dataset):
 
     Returns
     -------
-    bbox_list : list containing the sizes of the minimum bounding boxes containing the labels
-                in the form [xmin, xmax, ymin, ymax, zmin, zmax]
+    bbox_list : list of lists for each image, for each slice, containing numpy arrays with: lower and upper bounderies along
+                x and y directions and lower and upper boundaries for a patch, with size (256, 256), centered on the bounding
+                box center
 
     """
 
