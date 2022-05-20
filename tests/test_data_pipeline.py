@@ -1,6 +1,6 @@
 import SimpleITK as sitk
 import numpy as np
-from PIPELINE_CENTROID_CROPPING2 import Halve, BedRemoval, Thresholding, Crop
+from data_pipeline import Halve, BedRemoval, Thresholding, Crop
 import pytest
 import hypothesis as hp
 from hypothesis import given, settings
