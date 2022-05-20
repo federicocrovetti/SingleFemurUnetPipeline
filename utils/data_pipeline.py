@@ -198,50 +198,7 @@ def BoundingBox(dataset):
     return bbox_grouped 
 
 
-def Padding(data, compleat_measure, train = True):
-    """
-
-    Parameters
-    ----------
-    data : dict type object with 'features' and, optionally, 'labels' as keys containins sitk.Image objects
-    compleat_measure : list containing the lists of bounding boxes for the objects in the dataset
-    train : Str, optional. It determines if the function should be applied even on labels if those were 
-    provided as part of the dataset object. The default is True.
-
-    Returns
-    -------
-    pad_img and/or-not pad_labels : SimpleITK images padded with as many values, equal to -3000, as
-                                    specified by 'compleat_measure'.
-
-    """
-
-    if train == True:
-        pad = sitk.ConstantPadImageFilter()
-        pad.SetGlobalDefaultDirectionTolerance(7.21e-1)
-        pad.SetGlobalDefaultCoordinateTolerance(7.21e-1)
-        pad.SetConstant(-3000)
-        pad.SetPadUpperBound(compleat_measure)
-        pad_img = pad.Execute(data['features'])
-        pad_img.SetOrigin([-9.1640584e+01, -1.8851562e+02])
-        pad.SetConstant(0)
-        pad.SetPadUpperBound(compleat_measure)
-        pad_labels = pad.Execute(data['labels'])
-        pad_labels.SetOrigin([-9.1640584e+01, -1.8851562e+02])
-        
-        return pad_img, pad_labels
-    else:
-        pad = sitk.ConstantPadImageFilter()
-        pad.SetGlobalDefaultDirectionTolerance(7.21e-1)
-        pad.SetGlobalDefaultCoordinateTolerance(7.21e-1)
-        pad.SetConstant(-3000)
-        pad.SetPadUpperBound(compleat_measure)
-        pad_img = pad.Execute(data['features'])
-        pad_img.SetOrigin([-9.1640584e+01, -1.8851562e+02])
-        
-        return pad_img
-
-
-def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = True, train = True):
+def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = False, train = True):
     """
 
     Parameters
@@ -265,7 +222,6 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = True, tra
         dataset_cropped =  {'features': [], 'labels':[]}
         for j in range(len(dataset['features'])):
             cropped = {'features' : [], 'labels' : []}
-            crop_pad = {'features' : [], 'labels' : []}
             for i in range(len(bbox_grouped[j])):
                 if bbox_grouped[j][i][0] == 7000:
                     pass
@@ -290,17 +246,10 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = True, tra
                     cropped['features'].append(data)
                     cropped['labels'].append(labels)
                     
-            sqcmplt = SquareComplete(cropped, (256,256))  
-            for h in range(len(cropped['features'])):
-                compleat_measure = sqcmplt[h]
-                data = {key: val[h] for key, val in cropped.items()}
-                pad_img, pad_labels = Padding(data, compleat_measure, train = True)
-                crop_pad['features'].append(pad_img)
-                crop_pad['labels'].append(pad_labels)
             join = sitk.JoinSeriesImageFilter()
             join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
-            crop_pad_volume = join.Execute([crop_pad['features'][k] for k in range(len(crop_pad['features']))])
-            crop_pad_labels = join.Execute([crop_pad['labels'][k] for k in range(len(crop_pad['labels']))])
+            crop_pad_volume = join.Execute([cropped['features'][k] for k in range(len(cropped['features']))])
+            crop_pad_labels = join.Execute([cropped['labels'][k] for k in range(len(cropped['labels']))])
             MDTransfer(dataset['features'][j], crop_pad_volume)
             MDTransfer(dataset['labels'][j], crop_pad_labels)
             dataset_cropped['features'].append(crop_pad_volume)
@@ -311,7 +260,6 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = True, tra
     elif write_to_folder == True and train == True:
         for j in range(len(dataset['features'])):
             cropped = {'features' : [], 'labels' : []}
-            crop_pad = {'features' : [], 'labels' : []}
             for i in range(len(bbox_grouped[j])):
                 if bbox_grouped[j][i][0] == 7000:
                     pass
@@ -335,17 +283,10 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = True, tra
                     cropped['features'].append(data)
                     cropped['labels'].append(labels)
            
-            sqcmplt = SquareComplete(cropped, (256,256))  
-            for h in range(len(cropped['features'])):
-                compleat_measure = sqcmplt[h]
-                data = {key: val[h] for key, val in cropped.items()}
-                pad_img, pad_labels = Padding(data, compleat_measure, train = True)
-                crop_pad['features'].append(pad_img)
-                crop_pad['labels'].append(pad_labels)
             join = sitk.JoinSeriesImageFilter()
             join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
-            crop_pad_volume = join.Execute([crop_pad['features'][k] for k in range(len(crop_pad['features']))])
-            crop_pad_labels = join.Execute([crop_pad['labels'][k] for k in range(len(crop_pad['labels']))])
+            crop_pad_volume = join.Execute([cropped['features'][k] for k in range(len(cropped['features']))])
+            crop_pad_labels = join.Execute([cropped['labels'][k] for k in range(len(cropped['labels']))])
             MDTransfer(dataset['features'][j], crop_pad_volume)
             MDTransfer(dataset['labels'][j], crop_pad_labels)
             
@@ -357,7 +298,6 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = True, tra
         dataset_cropped =  {'features': []}
         for j in range(len(dataset['features'])):
             cropped = {'features' : []}
-            crop_pad = {'features' : []}
             for i in range(len(bbox_grouped[j])):
                 if bbox_grouped[j][i][0] == 7000:
                     pass
@@ -376,15 +316,9 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = True, tra
                     data.SetOrigin([-9.1640584e+01, -1.8851562e+02])               
                     cropped['features'].append(data)
                     
-            sqcmplt = SquareComplete(cropped, (256,256))  
-            for h in range(len(cropped['features'])):
-                compleat_measure = sqcmplt[h]
-                data = {key: val[h] for key, val in cropped.items()}
-                pad_img = Padding(data, compleat_measure, train = False)
-                crop_pad['features'].append(pad_img)
             join = sitk.JoinSeriesImageFilter()
             join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
-            crop_pad_volume = join.Execute([crop_pad['features'][k] for k in range(len(crop_pad['features']))])
+            crop_pad_volume = join.Execute([cropped['features'][k] for k in range(len(cropped['features']))])
             MDTransfer(dataset['features'][j], crop_pad_volume)
             dataset_cropped['features'].append(crop_pad_volume)
             
@@ -393,7 +327,6 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = True, tra
     elif write_to_folder == True and train == False:
         for j in range(len(dataset['features'])):
             cropped = {'features' : []}
-            crop_pad = {'features' : []}
             for i in range(len(bbox_grouped[j])):
                 if bbox_grouped[j][i][0] == 7000:
                     pass
@@ -412,15 +345,9 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = True, tra
                     data.SetOrigin([-9.1640584e+01, -1.8851562e+02])               
                     cropped['features'].append(data)
            
-            sqcmplt = SquareComplete(cropped, (256,256))  
-            for h in range(len(cropped['features'])):
-                compleat_measure = sqcmplt[h]
-                data = {key: val[h] for key, val in cropped.items()}
-                pad_img = Padding(data, compleat_measure, train = False)
-                crop_pad['features'].append(pad_img)
             join = sitk.JoinSeriesImageFilter()
             join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
-            crop_pad_volume = join.Execute([crop_pad['features'][k] for k in range(len(crop_pad['features']))])
+            crop_pad_volume = join.Execute([cropped['features'][k] for k in range(len(cropped['features']))])
             MDTransfer(dataset['features'][j], crop_pad_volume)
             NIFTISingleSampleWriter(crop_pad_volume, ID[j], new_folder_path)
         
