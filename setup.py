@@ -59,7 +59,7 @@ DESCRIPTION = 'Package for Semantic Segmentation of CT images of femurs with a s
 URL = 'https://github.com/federicocrovetti/2DUnetFemurSegmentation'
 EMAIL = 'federico.crovetti@studio.unibo.it'
 AUTHOR = 'Federico Crovetti, Riccardo Biondi'
-VERSION = 1.0.0
+VERSION = '1.0.0'
 KEYWORDS = 'artificial-intelligence machine-learning deep-learning medical-imaging tensorflow u-net single-femur femur'
 REQUIREMENTS_FILENAME = os.path.join(here, 'requirements.txt')
 README_FILENAME = os.path.join(here, 'README.md')
@@ -79,7 +79,7 @@ setup(
     url=URL,
     download_url=URL,
     keywords=KEYWORDS,
-    packages=find_packages(include=['utils', 'utils.*','model', 'model.*'], exclude=('tests')),
+    packages=find_packages(include=['SFUNet', 'SFUNet.*'], exclude=('tests')),
     include_package_data=True, # no absolute paths are allowed
     platforms='any',
     install_requires=get_requires(REQUIREMENTS_FILENAME),
