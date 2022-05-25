@@ -62,7 +62,6 @@ AUTHOR = 'Federico Crovetti, Riccardo Biondi'
 VERSION = 1.0.0
 KEYWORDS = 'artificial-intelligence machine-learning deep-learning medical-imaging tensorflow u-net single-femur femur'
 REQUIREMENTS_FILENAME = os.path.join(here, 'requirements.txt')
-#VERSION_FILENAME = os.path.join(here, 'CTLungSeg', '__version__.py')
 README_FILENAME = os.path.join(here, 'README.md')
 
 
@@ -80,7 +79,7 @@ setup(
     url=URL,
     download_url=URL,
     keywords=KEYWORDS,
-    packages=find_packages(include=['utils','model'], exclude=('tests')),
+    packages=find_packages(include=['utils', 'utils.*','model', 'model.*'], exclude=('tests')),
     include_package_data=True, # no absolute paths are allowed
     platforms='any',
     install_requires=get_requires(REQUIREMENTS_FILENAME),
