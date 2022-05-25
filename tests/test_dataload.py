@@ -6,8 +6,7 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 import hypothesis.strategies as st
-from dataload import NIFTISampleWriter
-from dataload import NiftiReader
+from utils.dataload import NiftiReader, NIFTISampleWriter
 
 
 #path/text generation
