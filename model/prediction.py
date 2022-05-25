@@ -6,9 +6,8 @@ import numpy as np
 from pathlib import Path
 import argparse
 from argparse import RawTextHelpFormatter
-from dataload import DataLoad
-from prediction_feeder import PredictionDataFeeder
-from stackandsplit import NormDict, StackedData
+from utils.dataload import DataLoad
+from model.prediction_feeder import PredictionDataFeeder
 from IPython.display import display
 import tensorflow.keras.backend as K
 
