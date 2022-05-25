@@ -6,8 +6,8 @@ import numpy as np
 from pathlib import Path
 import argparse
 from argparse import RawTextHelpFormatter
-from utils.dataload import DataLoad
-from model.prediction_feeder import PredictionDataFeeder
+from SFUNet.utils.dataload import DataLoad
+from SFUNet.model.prediction_feeder import PredictionDataFeeder
 from IPython.display import display
 import tensorflow.keras.backend as K
 
