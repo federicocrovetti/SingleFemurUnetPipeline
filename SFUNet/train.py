@@ -5,8 +5,8 @@ import numpy as np
 from pathlib import Path
 from utils.dataload import DataLoad 
 import tensorflow as tf
-from model.feeder import ImageFeeder
-from model.model2D import model2D
+from SFUNet.model.feeder import ImageFeeder
+from SFUNet.model.model2D import model2D
 import argparse
 from argparse import RawTextHelpFormatter
 
