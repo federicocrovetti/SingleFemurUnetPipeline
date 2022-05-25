@@ -4,8 +4,8 @@ import argparse
 from argparse import RawTextHelpFormatter
 import numpy as np
 from pathlib import Path
-from dataload import DataLoad, NIFTISampleWriter, NIFTISingleSampleWriter, MDTransfer
-from square_complete import SquareComplete
+from utils.dataload import DataLoad, NIFTISampleWriter, NIFTISingleSampleWriter, MDTransfer
+from utils.square_complete import SquareComplete
 
 
 def Halve(dataset, side, train = True):
