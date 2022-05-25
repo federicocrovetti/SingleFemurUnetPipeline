@@ -6,7 +6,7 @@ from itertools import islice
 import argparse
 from argparse import RawTextHelpFormatter
 from pathlib import Path
-from utils.dataload import DataLoad, NIFTISampleWriter, MDTransfer
+from SFUNet.utils.dataload import DataLoad, NIFTISampleWriter, MDTransfer
 
 def Reconstruction(data, ID, boundingbox, new_folder_path):
     """
