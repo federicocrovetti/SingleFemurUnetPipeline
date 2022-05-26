@@ -8,6 +8,7 @@ import argparse
 from argparse import RawTextHelpFormatter
 from SFUNet.utils.dataload import DataLoad
 from SFUNet.model.prediction_feeder import PredictionDataFeeder
+from SFUNet.utils.stackandsplit import NormDict, StackedData, Split
 from IPython.display import display
 import tensorflow.keras.backend as K
 
