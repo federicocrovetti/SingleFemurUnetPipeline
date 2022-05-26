@@ -25,7 +25,7 @@ def image_generator(draw):
     spacing = draw(st.tuples(*[st.floats(.1, 1.)] * 3))
     direction = tuple([1., 0., 0., 0., 1., 0., 0., 0., 1.])
     
-    features = np.ones((25, 25, 20))
+    features = np.ones((20, 25, 25))
     image = sitk.GetImageFromArray(features)
     image.SetOrigin(origin)
     image.SetSpacing(spacing)
@@ -38,6 +38,7 @@ def test_NIFTISampleWriter(datas, labelss, IDs, new_folder_paths):
     data = datas
     labels = labelss
     ID = IDs
+    working_directory_path = Path.cwd()
     new_folder_path = working_directory_path / Path('{}'.format(new_folder_paths))
     NIFTISampleWriter(data, labels, ID, new_folder_path)
     image = NiftiReader(new_folder_path / 'mod{}'.format(ID)/ 'mod{}Data'.format(ID)/ 'mod{}.nii'.format(ID))
