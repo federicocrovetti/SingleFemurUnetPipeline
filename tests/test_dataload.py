@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from hypothesis import given, settings
 import hypothesis.strategies as st
-from utils.dataload import NiftiReader, NIFTISampleWriter
+from SFUNet.utils.dataload import NiftiReader, NIFTISampleWriter
 
 
 #path/text generation
