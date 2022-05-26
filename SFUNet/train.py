@@ -7,6 +7,7 @@ from utils.dataload import DataLoad
 import tensorflow as tf
 from SFUNet.model.feeder import ImageFeeder
 from SFUNet.model.model2D import model2D
+from SFUNet.utils.stackandsplit import NormDict, StackedData, Split
 import argparse
 from argparse import RawTextHelpFormatter
 
