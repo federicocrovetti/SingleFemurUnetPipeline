@@ -1,6 +1,6 @@
 import SimpleITK as sitk
 import numpy as np
-from utils.data_pipeline import Halve, BedRemoval, Thresholding, Crop
+from SFUNet.utils.data_pipeline import Halve, BedRemoval, Thresholding, Crop
 import pytest
 import hypothesis as hp
 from hypothesis import given, settings
