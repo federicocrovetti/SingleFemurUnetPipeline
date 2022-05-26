@@ -63,6 +63,12 @@ VERSION = '1.0.0'
 KEYWORDS = 'artificial-intelligence machine-learning deep-learning medical-imaging tensorflow u-net single-femur femur'
 REQUIREMENTS_FILENAME = os.path.join(here, 'requirements.txt')
 README_FILENAME = os.path.join(here, 'README.md')
+try:
+  LONG_DESCRIPTION = read_description(README_FILENAME)
+
+except IOError:
+  LONG_DESCRIPTION = DESCRIPTION
+
 
 
 
