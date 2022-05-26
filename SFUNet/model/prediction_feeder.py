@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #feeder for data to predict
+import tensorflow as tf
 
 class PredictionDataFeeder(tf.keras.utils.Sequence):
     """Helper to iterate over the data (as Numpy arrays)."""
