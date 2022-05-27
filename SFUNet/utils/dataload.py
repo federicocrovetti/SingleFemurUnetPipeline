@@ -170,21 +170,21 @@ def NIFTISampleWriter(volume_image, volume_mask, ID, new_folder_path):
     if new_patient_folder.exists():
         pass
     else:
-        new_patient_folder.mkdir(exist_ok=True)
+        new_patient_folder.mkdir(parents=True, exist_ok=True)
     
     data_subfolder = new_patient_folder / 'mod{}Data'.format(ID)
     
     if data_subfolder.exists():
         pass
     else:
-        data_subfolder.mkdir(exist_ok=True)
+        data_subfolder.mkdir(parents=True, exist_ok=True)
         
     masks_subfolder = new_patient_folder / 'mod{}Segmentation'.format(ID)
     
     if masks_subfolder.exists():
         pass
     else:
-        masks_subfolder.mkdir(exist_ok=True)
+        masks_subfolder.mkdir(parents=True, exist_ok=True)
         
     new_data_path = data_subfolder / 'mod{}.nii'.format(ID)
     sitk.WriteImage(volume_image, '{}'.format(new_data_path))
