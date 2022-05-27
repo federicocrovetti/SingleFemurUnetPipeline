@@ -140,8 +140,8 @@ def test_Halve(gen):
     side = gen[1]
     halve_dst = Halve(dst, side, train = True)
     for i in range(len(halve_dst['features'])):
-        assert(halve_dst['features'][i].GetSize()[:2] == [256, 512])
-        assert(halve_dst['labels'][i].GetSize()[:2] == [256, 512])
+        assert(halve_dst['features'][i].GetSize()[:2] == (256, 512))
+        assert(halve_dst['labels'][i].GetSize()[:2] == (256, 512))
         assert(any(halve_dst['labels'][i][:,:,:]))
         
     
@@ -181,16 +181,6 @@ def test_Crop(dst_gen, IDstr):
         assert(crop_dst['features'][i].GetSize()[1] == 256)
         assert(crop_dst['labels'][i].GetSize()[0] == 256)
         assert(crop_dst['labels'][i].GetSize()[1] == 256)
-        for j in range(len(crop_dst['features'][i])):
-        #testing that the center of bounding box and the center of the (256,256) patch coincide
-            d_sup = np.abs(bbox_grouped[i][j][3] - ((bbox_grouped[i][j][3] - bbox_grouped[i][j][2])//2) + bbox_grouped[i][j][2] - 128)
-            d_inf = np.abs(bbox_grouped[i][j][2] + (((bbox_grouped[i][j][3] - bbox_grouped[i][j][2])//2) + bbox_grouped[i][j][2] - 128))
-            #Rounding that accounts for odd Y coordinates of the origin of the bounding boxes
-            if d_inf//2 != 0:
-                d_inf = d_inf + 1
-            if d_sup//2 != 0:
-                d_sup = d_sup + 1
-            assert(d_sup == d_inf)
-    
+       
     
     
