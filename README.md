@@ -3,10 +3,35 @@ This package provides an end-to-end pipeline, working with 3D CT scans, both for
 ## Overview
 The particularity of this implemantetion of Semantic Segmentation is that the package is designed to predict the shapes of single femurs: this mandatory requirement 
 entails some workarounds in the pre\post-processing of the data to be fed to the network. A flow-chart of the various workflows is provided in the [Workflows](#workflows) section.
+It's possible to work with various image formats in input, namely:
+* NIFTI;
+* Nrrd;
+* DICOM.
+
 ## Requirements
 There are some requirements to be satisfied for the correct functioning of the package, both in package dependencies, in folder structure for the data and in the naming of the subfolders representing the patients. 
 ### Dependencies 
 ### Folder Structure
+```
+DataFolder
+    ├── patient01
+    │   ├── patient01Data
+    |   |       |
+    |   |       └──NIFTI/Nrrd file or DICOM sequence
+    │   └── patient01Segmentations
+    |   |       |
+    |   |       └──NIFTI/Nrrd file or DICOM sequence
+    ├── patient02
+    │   ├── patient02Data
+    |   |       |
+    |   |       └──NIFTI/Nrrd file or DICOM sequence
+    │   └── patient02Segmentations
+    |   |       |
+    |   |       └──NIFTI/Nrrd file or DICOM sequence
+    .
+    .
+    .
+ ```
 ### Subfolders Naming
 Folders identifying the patients, which contain the subfolders with the images and the segmentations, **must contain _R_ or _L_** in the name, so that the leg of which the label is present is known to the algorithm. 
 The subfolders, for each patient, must contain **_Data_** and **_Segmentation_** (or **_Segmentations_**) in the corresponding name.
