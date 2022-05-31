@@ -1,16 +1,40 @@
 # Unet Single-Femur Segmentation
-This package provides an end-to-end pipeline, working with 3D CT scans, both for the training of the designed Neural Netork architecture and for the prediction on new data. The predicted segmentation can also be extracted and written to a NIFTI file.
 ## Overview
-The particularity of this implemantetion of Semantic Segmentation is that the package is designed to predict the shapes of single femurs: this mandatory requirement 
-entails some workarounds in the pre\post-processing of the data to be fed to the network. A flow-chart of the various workflows is provided in the [Workflows](#workflows) section.
+
+This package provides an end-to-end pipeline, working with 3D CT scans, both for the training of the designed Neural Netork architecture and for the prediction on new data. The predicted segmentation can also be extracted and written to a NIFTI file.
+It tackles the task by working on a decomposition in 2D slices of the original volume image, both for the pre\postprocessing and training\prediction, going back to a 3D volume image by means of a reconstruction pipeline.
+
 It's possible to work with various image formats in input, namely:
 * NIFTI;
 * Nrrd;
-* DICOM.
+* DICOM;
+
+The particularity of this implementation of Semantic Segmentation is that the package is designed to predict the shapes of single femurs: this mandatory requirement 
+entails some workarounds in the pre\post-processing of the data to be fed to the network. 
+
+Fully Convolutional Neural Networks (FCN) require squared input images, with side sizes following $log_2$ scale, to work at their best. 
+In order to achieve that data format, the preprocessing pipeline takes care of splitting the volume image in half, identifying where the femur we want to work on is located, to then obtain -slice by slice- a (256,256) patch centered about the center of the bounding box.
+The latter one is obtained from a binary thresholding on the image where the bed has already been removed, with which we select the area of interest for our task.
+The center of this region is then used to cut the patch, with a cross range $\pm 128$ on _x_ and _y_ axes.
+Once obtained those patches along the depth of each volume image, those are stacked un together in a new (256,256,depth) volume, which can be written in a new data folder with the structure designed as in the [Folder Structure](#folder_structure) subsection.
+
+**N.B:** It is **__required__** that even the original folder containing the data with which one is working with follows the same structure
+
+Once the prediction phase is ended (or the training phase in case the objective is to train the network) and the resulting segmentation is written to the desired folder, the result is a volume image of misaligned 2D slices. Hence the bone_reconstruction module can be used to reconstruct the original shape of the femur:
+it does so by taking the predicted volume and realigning its slices following the indication on where the bounding boxes were placed on the original image, stacking them together in a new volume. 
+
+A flowchart of the various workflows is provided in the [Workflows](#workflows) section.
 
 ## Requirements
 There are some requirements to be satisfied for the correct functioning of the package, both in package dependencies, in folder structure for the data and in the naming of the subfolders representing the patients. 
+The provided Unet architecture works only with (256,256,depth) shaped volumes.
+
 ### Dependencies 
+* numpy;
+* SimpleITK;
+* hypothesis;
+* pytest;
+* tensorflow >= 2.6.0.
 ### Folder Structure
 ```
 DataFolder
@@ -55,7 +79,7 @@ graph TD;
     M["Reconstruction (Stacking and alignment of previously cropped (and misaligned) slices from the images)"] --> O["NIFTISampleWriter (Reconstructed image is written in a NIFTI file at the desired Path )"];
     end;
 ```
-## Pre and Post Processing Workflows
+## Training and Prediction Workflows
 ```mermaid
 graph TD;
     subgraph Train;
@@ -73,7 +97,7 @@ graph TD;
     M["PredictionDataFeeder (class inheriting from tf.keras.sequence for data feeding)"] --> N["Unet predict"];
     O["dice_coef, dice_loss"] --> N["Unet predict"];
     N["Unet predict"] --> P["display_mask (prediction slices are displayed"];
-    N["Unet predict"] --> Q["NIFTISampleWriter (predicted segmentations ar written in the desired path)"];
+    N["Unet predict"] --> Q["NIFTISampleWriter (predicted segmentations are written in the desired path)"];
     end
 ```
 
