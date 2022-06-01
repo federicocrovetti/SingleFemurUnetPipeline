@@ -47,7 +47,7 @@ def Reconstruction(data, ID, boundingbox, new_folder_path):
         recon_volume = join.Execute([reconstructed['features'][k] for k in range(len(reconstructed['features']))])
         recon_labels = join.Execute([reconstructed['labels'][k] for k in range(len(reconstructed['labels']))])
         MDTransfer(data['features'][i], recon_volume)
-        MDTransfer(data['labels'][i], recon_volume)
+        MDTransfer(data['labels'][i], recon_labels)
         
         NIFTISampleWriter(recon_volume, recon_labels, ID[i], new_folder_path)
         
