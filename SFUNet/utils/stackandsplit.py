@@ -11,15 +11,19 @@ def NormDict(data):
     -------
     norm : dict type object of the same kind of the input 'data', where each array has values in the [0,1] range
     """
-    norm = {'features': [], 'labels':[]}
-    for i in range(len(data ['features'])):
-        shift = (data['features'][i] + abs(np.min(data['features'][i])))
-        norm_data = np.divide(shift, np.max(shift))
-        norm['features'].append(norm_data)
-    for i in range(len(data ['labels'])):
-        norm['labels'].append(data['labels'][i])
-
-    return norm    
+   if type(data) is dict:
+        if type(data['features'][0]) == np.ndarray:
+            norm = {'features': [], 'labels':[]}
+            for i in range(int(len(data['features']))):
+                shift = (data['features'][i] + abs(np.min(data['features'][i])))
+                norm_data = np.divide(shift, np.max(shift))
+                norm['features'].append(norm_data)
+                norm['labels'].append(data['labels'][i])
+            return norm 
+        else:
+            raise ValueError("A dict type object with 2 keys, containing a series of arrays was expected, instead a/an {} was given".format(type(data['features'][0])))
+    else:
+        raise ValueError("A dict type object with 2 keys was expected, a/an {} was given instead".format(type(data)))
 
 
 def StackedData(data):
@@ -28,7 +32,7 @@ def StackedData(data):
     Parameters
     ----------
     data : dict type object, with keys 'features' and 'labels', containing the images and the corresponding 
-    masks as lists of numpy arrays
+    masks as lists of numpy arrays, or SimpleItk.Image objects
     
     Raises
     ------
@@ -38,15 +42,22 @@ def StackedData(data):
     stacked : dict type object containing a numpy array which groups the data passed to the function
     """
     if type(data) is dict:
-        stacked = {'features': [], 'labels':[]}
-        for i in range(len(data['features'])):
-            for j in range(len(data['features'][i][0, 0, :])):
-                stacked['features'].append(data['features'][i][:,:,j])
-
-        for i in range(len(data['labels'])):
-            for j in range(len(data['labels'][i][0, 0, :])):
-                stacked['labels'].append(data['labels'][i][:,:,j])
-
+         if type(data['features'][0]) == sitk.Image:
+            stacked = {'features': [], 'labels':[]}
+            for i in range(len(data['features'])):
+                for j in range(data['features'][i].GetSize()[2]):
+                    arr_slice = sitk.GetArrayFromImage(data['features'][i][:,:,j])
+                    stacked['features'].append(arr_slice)
+                    lab_slice = sitk.GetArrayFromImage(data['labels'][i][:,:,j])
+                    stacked['labels'].append(lab_slice)
+        elif type(data['features'][0]) == np.ndarray:
+            stacked = {'features': [], 'labels':[]}
+            for i in range(len(data['features'])):
+                for j in range(data['features'][i].shape[2]):
+                    arr_slice = data['features'][i][:,:,j]
+                    stacked['features'].append(arr_slice)
+                    lab_slice = data['labels'][i][:,:,j]
+                    stacked['labels'].append(lab_slice)
         return stacked
     else:
         raise ValueError("A dict type object with 2 keys was expected, a/an {} was given instead".format(type(data)))
