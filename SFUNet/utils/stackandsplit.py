@@ -13,7 +13,7 @@ def NormDict(data):
     norm : dict type object of the same kind of the input 'data', where each array has values in the [0,1] range
     """
    if type(data) is dict:
-        if type(data['features'][0]) == np.ndarray:
+    if type(data['features'][0]) == np.ndarray:
             norm = {'features': [], 'labels':[]}
             for i in range(int(len(data['features']))):
                 shift = (data['features'][i] + abs(np.min(data['features'][i])))
@@ -43,7 +43,7 @@ def StackedData(data):
     stacked : dict type object containing a numpy array which groups the data passed to the function
     """
     if type(data) is dict:
-         if type(data['features'][0]) == sitk.Image:
+        if type(data['features'][0]) == sitk.Image:
             stacked = {'features': [], 'labels':[]}
             for i in range(len(data['features'])):
                 for j in range(data['features'][i].GetSize()[2]):
