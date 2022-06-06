@@ -99,7 +99,7 @@ def ReconstructionExtMetadata(data, ID, boundingbox, new_folder_path, md, train 
             for j in range(len(boundingbox[i])):
             
                 cut_feat = data['features'][i][:, :, j][:,:]
-                rec_slice_feat = sitk.Image(256, 512, sitk.sitkInt16
+                rec_slice_feat = sitk.Image(256, 512, sitk.sitkInt16)
                 rec_slice_feat[0 : 256, int(boundingbox[i][j][4]) : int(boundingbox[i][j][5])] = cut_feat #, y_min : y_max] = cut_feat
                 rec_slice_feat.SetOrigin([-9.1640584e+01, -1.8851562e+02])
        
