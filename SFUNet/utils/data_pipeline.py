@@ -413,7 +413,7 @@ if __name__ == '__main__':
     
     parser.add_argument('train', 
                         metavar='train',
-                        type = str, 
+                        type = bool, 
                         help='True when we have labels (training phase), False when we do not. The default is True.')
     
     parser.add_argument('--bbox_csv',
@@ -465,9 +465,9 @@ if __name__ == '__main__':
         else:
             del(side)
     dataset = BedRemoval(data, train=args.train)        
-    halve_dst = Halve(dataset, side, train = args.data_with_masks)     
+    halve_dst = Halve(dataset, side, train = args.train)     
     
-    thresh_dst = Thresholding(halve_dst, [args.low_end_threshold, args.high_end_threshold])
+    thresh_dst = Thresholding(halve_dst, [args.low_end_threshold, args.high_end_threshold], train = args.train)
     label_sizes = BoundingBox(thresh_dst)
     
     Crop(halve_dst, label_sizes, ID, new_folder_path, write_to_folder = args.write_to_folder, train = args.train)
