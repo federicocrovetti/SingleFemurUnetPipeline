@@ -6,7 +6,7 @@ import numpy as np
 from pathlib import Path
 import argparse
 from argparse import RawTextHelpFormatter
-from SFUNet.utils.dataload import DataLoad
+from SFUNet.utils.dataload import DataLoad, NIFTISingleSampleWriter
 from SFUNet.model.prediction_feeder import PredictionDataFeeder
 from SFUNet.utils.stackandsplit import NormDict, StackedData, Split
 from IPython.display import display
@@ -50,21 +50,24 @@ if __name__ == '__main__':
                         type = str, 
                         help='Path to the file which contains the trained network')
     
-    parser.add_argument('img_size', 
-                        type = tuple, 
-                        help='Tuple containing the sizes of the images (sizes must be equal along X and Y axes). Sizes must match with those the nework was trained with')
+    parser.add_argument('write_to_folder', 
+                        type = bool, 
+                        help='The resulting SimpleITK image is written or not to the indicated path')
 
     parser.add_argument('batch_size', 
                         type = int, 
-                        help='Batch for the loading of the images to be evalued')    
+                        help='Batch for the loading of the images to be evalued')
+    
+    parser.add_argument('--new_folder_path', 
+                        type = str, 
+                        help='.')
     
     
     args = parser.parse_args()
     
     if args.basepath:
         basepath = Path(args.basepath) 
-        
-
+    
     files_in_basepath = basepath.iterdir()
     for item in files_in_basepath:
         if item.is_dir():
@@ -84,19 +87,35 @@ if __name__ == '__main__':
                     elif "Segmentation" in elem.name:
                         masks.append(elem)
     
+    ID = data_folders
+    
     data, data_array = DataLoad(data, masks)
-    del(data)
     data = StackedData(data_array)
     del(data_array)
     
     model = tf.keras.models.load_model('{}'.format(args.network), custom_objects= {'dice_coef_loss' : dice_coef_loss, 'dice_coef': dice_coef})
     
-    test_gen = PredictionDataFeeder(args.batch_size, args.img_size, data['features'])
+    test_gen = PredictionDataFeeder(args.batch_size, (256,256), data['features'])
     val_preds = model.predict(test_gen)
     
-    for i in range(len(data['features'])):
-        display_mask(i)
-        img = data['features'][i]
-        img = np.expand_dims(img, axis = -1)
-        img = tf.keras.preprocessing.image.array_to_img(img)
-        display(img)
+    if args.write_to_folder == True:
+        new_folder_path = Path(args.new_folder_path)
+        if new_folder_path.exists():
+            pass
+        else:
+            new_folder_path.mkdir(exist_ok=True) 
+           
+        preds = val_preds[:,:,:,0]
+        preds = sitk.GetImageFromArray(preds)
+        NIFTISingleSampleWriter(preds, ID, new_folder_path)
+        
+        #metadata of the original image volume
+        with open(new_folder_path, 'w', newline='', encoding='UTF8') as f:
+            writer = csv.writer(f, delimiter=',')
+            for i in range(len(data['features'])):
+                writer.writerow(data['features'][i].GetSpacing()[0], data['features'][i].GetSpacing()[1], data['features'][i].GetSpacing()[2],
+                                data['features'][i].GetOrigin()[0], data['features'][i].GetOrigin()[1], data['features'][i].GetOrigin()[2])
+    else:
+        pass
+    
+    
