@@ -18,10 +18,14 @@ The latter one is obtained from a binary thresholding on the image where the bed
 The center of this region is then used to cut the patch, with a cross range $\pm 128$ on _x_ and _y_ axes.
 Once obtained those patches along the depth of each volume image, those are stacked un together in a new (256,256,depth) volume, which can be written in a new data folder with the structure designed as in the [Folder Structure](#folder_structure) subsection.
 
-**N.B:** It is **__required__** that even the original folder containing the data with which one is working with follows the same structure
 
 Once the prediction phase is ended (or the training phase in case the objective is to train the network) and the resulting segmentation is written to the desired folder, the result is a volume image of misaligned 2D slices. Hence the bone_reconstruction module can be used to reconstruct the original shape of the femur:
 it does so by taking the predicted volume and realigning its slices following the indication on where the bounding boxes were placed on the original image, stacking them together in a new volume. 
+
+**Notes:** 
+* It is **__required__** that even the original folder containing the data with which one is working with follows the same structure;
+* The cropping operated by data_pipeline.py writes a .txt file (in the arguments upon calling the script the user must write the name of the new file with the .txt extension), in the folder where the original data is stored, with the positions of the bounding box veritces;
+* prediction.py writes a .txt file (with the request as above) where the metadata of the image fed to it are stored; 
 
 A flowchart of the various workflows is provided in the [Workflows](#workflows) section.
 
@@ -59,6 +63,22 @@ DataFolder
 ### Subfolders Naming
 Folders identifying the patients, which contain the subfolders with the images and the segmentations, **must contain _R_ or _L_** in the name, so that the leg of which the label is present is known to the algorithm. 
 The subfolders, for each patient, must contain **_Data_** and **_Segmentation_** (or **_Segmentations_**) in the corresponding name.
+
+## Installing
+
+
+## Working with 2DUnetFemurSegmentation
+This package is composed of multiple segments (as briefly explained in the [Overview](#overview) section) which allow for different kind of operations on the dataset under exam.
+The overall goal is twofold: to train a _FCN_ but mainly to be able to obtain a segmentation of the input femur CT, given an already trained _FCN_.
+Data input pipeline is shared among the training and the prediction tasks, so we'll make a distinction only when it'll come in handy.
+
+```shell
+user@machine:~$ python path_to_file\data_pipeline.py path_to_data_folder path_to_folder_cropped_images low_threshold high_threshold True True path_to_bbox_csv
+```
+With this command the cropped dataset will be written to the path_to_folder_cropped_images while a csv, named as the last part of path_to_bbox_csv, with the corresponding bounding boxe's coordinates, is written at the choosen path.
+
+
+
 # Workflows
 ## Pre and Post Processing Workflows
 ```mermaid
@@ -96,8 +116,7 @@ graph TD;
     L["StackedData (Unpacking of the input volume images. The slices composing them are stacked together)"] --> M["PredictionDataFeeder (class inheriting from tf.keras.sequence for data feeding)"];
     M["PredictionDataFeeder (class inheriting from tf.keras.sequence for data feeding)"] --> N["Unet predict"];
     O["dice_coef, dice_loss"] --> N["Unet predict"];
-    N["Unet predict"] --> P["display_mask (prediction slices are displayed"];
-    N["Unet predict"] --> Q["NIFTISampleWriter (predicted segmentations are written in the desired path)"];
+    N["Unet predict"] --> P["NIFTISampleWriter (predicted segmentations are written in the desired path)"];
     end
 ```
 
