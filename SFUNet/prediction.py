@@ -4,6 +4,7 @@
 import tensorflow as tf
 import numpy as np
 from pathlib import Path
+import csv
 import argparse
 from argparse import RawTextHelpFormatter
 from SFUNet.utils.dataload import DataLoad, NIFTISingleSampleWriter
