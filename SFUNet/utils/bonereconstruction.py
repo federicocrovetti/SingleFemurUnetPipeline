@@ -42,7 +42,7 @@ def Reconstruction(data, ID, boundingbox, new_folder_path, train = False):
             recon_volume = join.Execute([reconstructed['features'][k] for k in range(len(reconstructed['features']))])
             MDTransfer(data['features'][i], recon_volume)
         
-            NIFTISingleSampleWriter(recon_volume, recon_labels, ID[i], new_folder_path)
+            NIFTISingleSampleWriter(recon_volume, ID[i], new_folder_path)
         
     else:
         for i in range(len(data['features'])):
