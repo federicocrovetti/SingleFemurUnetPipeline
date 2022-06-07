@@ -2,6 +2,7 @@
 #calling the trained network for predictions
 
 import tensorflow as tf
+import SimpleITK as sitk
 import numpy as np
 from pathlib import Path
 import csv
