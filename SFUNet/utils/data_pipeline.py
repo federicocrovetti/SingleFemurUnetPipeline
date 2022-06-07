@@ -408,7 +408,7 @@ if __name__ == '__main__':
     
     parser.add_argument('write_to_folder',
                         metavar = 'write_to_folder',
-                        type = str,
+                        type = bool,
                         help = 'True if the data is to be written in target directory, False if not')
     
     parser.add_argument('train', 
@@ -420,6 +420,11 @@ if __name__ == '__main__':
                         metavar = 'bbox_csv', 
                         type = str,
                         help='Optional argument that allows to individuate the path of the CSV file into which the bounding box coordinates will be written')
+    
+    parser.add_argument('--metadata_csv',
+                        metavar = 'metadata_csv', 
+                        type = str,
+                        help='Optional argument that allows to write a .txt containing the metadata of original images in the format ([spacing x y z origin x y x])  where each row represents a volume image' )
     
     
     args = parser.parse_args() 
@@ -437,7 +442,7 @@ if __name__ == '__main__':
     files_in_basepath = basepath.iterdir()
     for item in files_in_basepath:
         if item.is_dir():
-            if not item.name == '__pycache__' and not item.name == '.hypothesis' and not item.name == '_logdir_' and not item.name == 'Fedz':
+            if not item.name == '__pycache__' and not item.name == '.hypothesis' and not item.name == '_logdir_' and not item.name == 'Fedz' and not item.name == '.pytest_cache':
                 print(item.name)
                 data_folders.append(item.name)
                 path = basepath / '{}'.format(item.name)
@@ -446,7 +451,7 @@ if __name__ == '__main__':
     files_in_basepath = basepath.iterdir()
     for item in files_in_basepath:
         if item.is_dir():
-            if not item.name == '__pycache__' and not item.name == '.hypothesis' and not item.name == '_logdir_' and not item.name == 'Fedz':
+            if not item.name == '__pycache__' and not item.name == '.hypothesis' and not item.name == '_logdir_' and not item.name == 'Fedz' and not item.name == '.pytest_cache':
                 for elem in item.iterdir():
                     if "Data" in elem.name:
                         data.append(elem)
@@ -478,3 +483,10 @@ if __name__ == '__main__':
             for i in range(len(label_sizes)):
                 for j in range(len(label_sizes[i])):
                     writer.writerow(label_sizes[i][j])
+                    
+    if args.metadata_csv is not None:
+        with open(Path('{}'.format(args.metadata_csv)), 'w', newline='', encoding='UTF8') as f:
+            writer = csv.writer(f, delimiter=',')
+            for i in range(len(data['features'])):
+                writer.writerow((dataset['features'][i].GetSpacing()[0], dataset['features'][i].GetSpacing()[1], dataset['features'][i].GetSpacing()[2],
+                                 dataset['features'][i].GetOrigin()[0], dataset['features'][i].GetOrigin()[1], dataset['features'][i].GetOrigin()[2]))
