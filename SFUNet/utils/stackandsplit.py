@@ -12,8 +12,8 @@ def NormDict(data):
     -------
     norm : dict type object of the same kind of the input 'data', where each array has values in the [0,1] range
     """
-   if type(data) is dict:
-    if type(data['features'][0]) == np.ndarray:
+    if type(data) is dict:
+        if type(data['features'][0]) == np.ndarray:
             norm = {'features': [], 'labels':[]}
             for i in range(int(len(data['features']))):
                 shift = (data['features'][i] + abs(np.min(data['features'][i])))
@@ -25,7 +25,6 @@ def NormDict(data):
             raise ValueError("A dict type object with 2 keys, containing a series of arrays was expected, instead a/an {} was given".format(type(data['features'][0])))
     else:
         raise ValueError("A dict type object with 2 keys was expected, a/an {} was given instead".format(type(data)))
-
 
 def StackedData(data):
     """
