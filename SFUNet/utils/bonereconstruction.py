@@ -111,7 +111,7 @@ def ReconstructionExtMetadata(data, ID, boundingbox, new_folder_path, md, train 
             recon_volume.SetSpacing((md[0], md[1], md[2]))
             recon_volume.SetOrigin((md[3], md[4], md[5]))
         
-            NIFTISingleSampleWriter(recon_volume, recon_labels, ID[i], new_folder_path)
+            NIFTISingleSampleWriter(recon_volume, ID[i], new_folder_path)
         
     else:
         for i in range(len(data['features'])):
