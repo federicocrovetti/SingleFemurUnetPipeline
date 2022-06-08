@@ -1,4 +1,16 @@
 # Unet Single-Femur Segmentation
+
+* [Overview](#overview)
+* [Some Results](#some-results)
+* [UNet](#unet)
+* [Requirements](#requirements)
+* [Dependencies](#dependencies)
+* [Folder Structure](#folder-structure)
+* [Subfolders Naming](#subfolders-naming)
+* [Installing](#installing)
+* [Working with 2DUnetFemurSegmentation](#working-with-2dunetfemursegmentation)
+* [Workflows](#workflows)
+
 ## Overview
 
 This package provides an end-to-end pipeline, working with 3D CT scans, both for the training of the designed Neural Netork architecture and for the prediction on new data. The predicted segmentation can also be extracted and written to a NIFTI file.
@@ -23,11 +35,33 @@ Once the prediction phase is ended (or the training phase in case the objective 
 it does so by taking the predicted volume and realigning its slices following the indication on where the bounding boxes were placed on the original image, stacking them together in a new volume. 
 
 **Notes:** 
+
 * It is **__required__** that even the original folder containing the data with which one is working with follows the same structure;
 * The cropping operated by data_pipeline.py writes a .txt file (in the arguments upon calling the script the user must write the name of the new file with the .txt extension), in the folder where the original data is stored, with the positions of the bounding box veritces;
 * prediction.py writes a .txt file (with the request as above) where the metadata of the image fed to it are stored; 
 
 A flowchart of the various workflows is provided in the [Workflows](#workflows) section.
+
+## Some Results
+
+![alt text](https://github.com/federicocrovetti/2DUnetFemurSegmentation/blob/main/images/collage.png)
+
+Those results were obtained with the provided UNet, with parameters and specifics as follows:
+* Batch Size : 20;
+* Learning Rate : 0.001;
+* Epochs : 90;
+* Dataset Split : 85% (train), 10% (validation), 5% (test);
+* Optimizer : Adam;
+* Metric : Dice Coefficient;
+* Loss Function : Dice Coefficient Loss.
+
+_Please Note_ : This isn't by any means a completed project, so there's a lot to room for imporoving the results obtained (The original CT for which this label was obtained had a disjoint location along the bone, which is then transported to this segmentation)
+
+## UNet 
+
+
+![alt text](https://github.com/federicocrovetti/2DUnetFemurSegmentation/blob/main/images/netimage.png)
+
 
 ## Requirements
 There are some requirements to be satisfied for the correct functioning of the package, both in package dependencies, in folder structure for the data and in the naming of the subfolders representing the patients. 
@@ -62,7 +96,7 @@ DataFolder
  ```
 ### Subfolders Naming
 Folders identifying the patients, which contain the subfolders with the images and the segmentations, **must contain _R_ or _L_** in the name, so that the leg of which the label is present is known to the algorithm. 
-The subfolders, for each patient, must contain **_Data_** and **_Segmentation_** (or **_Segmentations_**) in the corresponding name.
+The subfolders, for each patient, must contain **_Data_** and **_Segmentation_** in the corresponding name.
 
 ## Installing
 
@@ -73,9 +107,24 @@ The overall goal is twofold: to train a _FCN_ but mainly to be able to obtain a 
 Data input pipeline is shared among the training and the prediction tasks, so we'll make a distinction only when it'll come in handy.
 
 ```shell
-user@machine:~$ python path_to_file\data_pipeline.py path_to_data_folder path_to_folder_cropped_images low_threshold high_threshold True True path_to_bbox_csv
+user@machine:~$ python path_to_file\data_pipeline.py path_to_data_folder path_to_folder_cropped_images low_threshold high_threshold True True --bbox_csv=path_to_bbox_txt --metadata_csv=path_to_metadata_txt
 ```
-With this command the cropped dataset will be written to the path_to_folder_cropped_images while a csv, named as the last part of path_to_bbox_csv, with the corresponding bounding boxe's coordinates, is written at the choosen path.
+With this command the cropped dataset will be written to the path_to_folder_cropped_images while a txt file, named as the last part of path_to_bbox_csv, with the corresponding bounding boxe's coordinates, is written at the choosen path. At the same time, a txt file containing in each row the spacing and the origin of the original images is written in the choosen destination. It will proof useful during the reconstruction process.
+
+### Training
+```shell
+user@machine:~$ python path_to_file\train.py path_to_data_folder (256,256) train_split validation_split test_split batch_size epochs path_to_callbacks path_to_save_model\model_name
+```
+
+### Predicting
+```shell
+user@machine:~$ python path_to_file\prediction.py path_to_data_folder path_to_trained_network True batch_size --new_folder_path path_to_new_folder
+```
+
+
+```shell
+user@machine:~$ python path_to_file\bonereconstruction.py path_to_data_folder path_to_new_folder False path_to_bbox_txt path_to_metadata_txt
+```
 
 
 
