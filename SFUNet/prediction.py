@@ -73,7 +73,7 @@ if __name__ == '__main__':
     files_in_basepath = basepath.iterdir()
     for item in files_in_basepath:
         if item.is_dir():
-            if not item.name == '__pycache__' and not item.name == '.hypothesis':
+            if not item.name == '__pycache__' and not item.name == '.hypothesis' and not item.name == '_logdir_' and not item.name == 'Fedz' and not item.name == '.pytest_cache':
                 print(item.name)
                 data_folders.append(item.name)
                 path = basepath / '{}'.format(item.name)
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     files_in_basepath = basepath.iterdir()
     for item in files_in_basepath:
         if item.is_dir():
-            if not item.name == '__pycache__' and not item.name == '.hypothesis':
+            if not item.name == '__pycache__' and not item.name == '.hypothesis' and not item.name == '_logdir_' and not item.name == 'Fedz' and not item.name == '.pytest_cache':
                 for elem in item.iterdir():
                     if "Data" in elem.name:
                         data.append(elem)
@@ -93,6 +93,7 @@ if __name__ == '__main__':
     
     data, data_array = DataLoad(data, masks)
     data = StackedData(data_array)
+    data = NormDict(data)
     del(data_array)
     
     model = tf.keras.models.load_model('{}'.format(args.network), custom_objects= {'dice_coef_loss' : dice_coef_loss, 'dice_coef': dice_coef})
@@ -107,16 +108,10 @@ if __name__ == '__main__':
         else:
             new_folder_path.mkdir(exist_ok=True) 
            
-        preds = val_preds[:,:,:,0]
-        preds = sitk.GetImageFromArray(preds)
+        val_preds = (val_preds > 0.5).astype(np.uint8)
+        preds = sitk.GetImageFromArray(val_preds)
         NIFTISingleSampleWriter(preds, ID, new_folder_path)
         
-        #metadata of the original image volume
-        with open(new_folder_path, 'w', newline='', encoding='UTF8') as f:
-            writer = csv.writer(f, delimiter=',')
-            for i in range(len(data['features'])):
-                writer.writerow(data['features'][i].GetSpacing()[0], data['features'][i].GetSpacing()[1], data['features'][i].GetSpacing()[2],
-                                data['features'][i].GetOrigin()[0], data['features'][i].GetOrigin()[1], data['features'][i].GetOrigin()[2])
     else:
         pass
     
