@@ -97,6 +97,7 @@ DataFolder
 ### Subfolders Naming
 Folders identifying the patients, which contain the subfolders with the images and the segmentations, **must contain _R_ or _L_** in the name, so that the leg of which the label is present is known to the algorithm. 
 The subfolders, for each patient, must contain **_Data_** and **_Segmentation_** in the corresponding name.
+This is due to the nature of the cropping during the preprocessing of the image.
 
 ## Installing
 
@@ -104,8 +105,9 @@ The subfolders, for each patient, must contain **_Data_** and **_Segmentation_**
 ## Working with 2DUnetFemurSegmentation
 This package is composed of multiple segments (as briefly explained in the [Overview](#overview) section) which allow for different kind of operations on the dataset under exam.
 The overall goal is twofold: to train a _FCN_ but mainly to be able to obtain a segmentation of the input femur CT, given an already trained _FCN_.
-Data input pipeline is shared among the training and the prediction tasks, so we'll make a distinction only when it will arise.
+Data input pipeline and Preprocessing is shared among the training and the prediction tasks, so we'll make a distinction only when it will arise.
 
+### Preprocessing
 ```shell
 user@machine:~$ python path_to_file\data_pipeline.py path_to_data_folder path_to_folder_cropped_images low_threshold high_threshold (write_to_folder)True (train)True --bbox_csv=path_to_bbox_txt --metadata_csv=path_to_metadata_txt
 ```
