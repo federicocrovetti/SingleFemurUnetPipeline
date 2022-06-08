@@ -151,5 +151,5 @@ if __name__ == '__main__':
     bounding_box_grouped = [list(islice(iterator, elem))
           for elem in img_sizes]
                 
-    ReconstructionExtMetadata(dataset, ID, bounding_box_grouped, new_folder_path, metadata_list, train = args.train)
+    ReconstructionExtMetadata(dataset, ID, bounding_box_grouped, new_folder_path, metadata_list)
 
