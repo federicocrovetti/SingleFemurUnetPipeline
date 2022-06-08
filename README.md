@@ -104,26 +104,42 @@ The subfolders, for each patient, must contain **_Data_** and **_Segmentation_**
 ## Working with 2DUnetFemurSegmentation
 This package is composed of multiple segments (as briefly explained in the [Overview](#overview) section) which allow for different kind of operations on the dataset under exam.
 The overall goal is twofold: to train a _FCN_ but mainly to be able to obtain a segmentation of the input femur CT, given an already trained _FCN_.
-Data input pipeline is shared among the training and the prediction tasks, so we'll make a distinction only when it'll come in handy.
+Data input pipeline is shared among the training and the prediction tasks, so we'll make a distinction only when it will arise.
 
 ```shell
-user@machine:~$ python path_to_file\data_pipeline.py path_to_data_folder path_to_folder_cropped_images low_threshold high_threshold True True --bbox_csv=path_to_bbox_txt --metadata_csv=path_to_metadata_txt
+user@machine:~$ python path_to_file\data_pipeline.py path_to_data_folder path_to_folder_cropped_images low_threshold high_threshold (write_to_folder)True (train)True --bbox_csv=path_to_bbox_txt --metadata_csv=path_to_metadata_txt
 ```
 With this command the cropped dataset will be written to the path_to_folder_cropped_images while a txt file, named as the last part of path_to_bbox_csv, with the corresponding bounding boxe's coordinates, is written at the choosen path. At the same time, a txt file containing in each row the spacing and the origin of the original images is written in the choosen destination. It will proof useful during the reconstruction process.
+The '_train_' keyword argument allow the script to understand if it is expected to work on a dataset where labels are already provided (for tasks that can comprehend the training), and it has to preprocess and crop both of them, or on a dataset where we have only the CT scans (as will be the case for the prediction task), and preprocess and crop only them.
+
+**Please Note:**
+One can choose to not write cropped images, even if it would be convenient for inspection by means of other pieces of software and for a more healty execution of this piece of software.
+It's also to be noticed, since it will be the same every time we will have to identify a folder, that the path choosen for the processed images will identify a parent folder where files will be written following a disposition as that of [Folder Structure](#folder-structure). 
+Each patient/sample folder, and each subsequent subfolder, will carry on the name of the folder in the original dataset, preceded by the root _'mod'_.
+
 
 ### Training
 ```shell
 user@machine:~$ python path_to_file\train.py path_to_data_folder (256,256) train_split validation_split test_split batch_size epochs path_to_callbacks path_to_save_model\model_name
 ```
+The provided Unet work on 2D images and is equipped with specifics as in the [Some Results](#some-results) section.
+Volume images are decomposed into 2D slices, stacked all together and normalized in the range [0,1], for them to be fed to the network.
 
 ### Predicting
 ```shell
-user@machine:~$ python path_to_file\prediction.py path_to_data_folder path_to_trained_network True batch_size --new_folder_path path_to_new_folder
+user@machine:~$ python path_to_file\prediction.py path_to_data_folder path_to_trained_network (write_to_folder)True batch_size --new_folder_path path_to_new_folder
 ```
+Volume images undergo the same treatment as before and go to through the prediction phase. After this phase we obtain a single binary volume, which represent the misaligned predictions for all of the 2D slices composing the original volume, stacked all together.
+This time we will have only one subfolder for each patient.
 
+### Reconstruction
+
+Since our prediction isn't very helpful right now, not resambling anything as a femur as we know, we need to give it back its original form. 
+This is carried out by taking note of where the bounding boxes were in the original image, and reposition each 2D slice of our predicted volume of shape (256,256,depth) accordingly to them on a new volume of shape (256,512,depth), as it was right at the initial phase in the preprocessing pipeline.
+We will also need the metadata of the original image, so to have a faithfully scaled predicted segmentation
 
 ```shell
-user@machine:~$ python path_to_file\bonereconstruction.py path_to_data_folder path_to_new_folder False path_to_bbox_txt path_to_metadata_txt
+user@machine:~$ python path_to_file\bonereconstruction.py path_to_data_folder path_to_new_folder path_to_bbox_txt path_to_metadata_txt
 ```
 
 
@@ -162,7 +178,7 @@ graph TD;
     end;
     subgraph Predict
     I["DataLoad (Loading of full dataset, or of a single patient)"] --> L["StackedData (Unpacking of the input volume images. The slices composing them are stacked together)"];
-    L["StackedData (Unpacking of the input volume images. The slices composing them are stacked together)"] --> M["PredictionDataFeeder (class inheriting from tf.keras.sequence for data feeding)"];
+    L["StackedData, NormDict (Unpacking of the input volume images. The slices composing them are stacked together, then all of them are normalized in the [0,1] range)"] --> M["PredictionDataFeeder (class inheriting from tf.keras.sequence for data feeding)"];
     M["PredictionDataFeeder (class inheriting from tf.keras.sequence for data feeding)"] --> N["Unet predict"];
     O["dice_coef, dice_loss"] --> N["Unet predict"];
     N["Unet predict"] --> P["NIFTISampleWriter (predicted segmentations are written in the desired path)"];
