@@ -1,4 +1,4 @@
-# Unet Single-Femur Segmentation
+# Single Femur Unet Segmentation
 
 * [Overview](#overview)
 * [Some Results](#some-results)
@@ -58,16 +58,17 @@ Those results were obtained with the provided UNet, with parameters and specific
 _Please Note_ : This isn't by any means a completed project, so there's a lot to room for imporoving the results obtained (The original CT for which this label was obtained had a disjoint location along the bone, which is then transported to this segmentation)
 
 ## UNet 
-
+Summary of the design of the Unet provided
 
 ![alt text](https://github.com/federicocrovetti/2DUnetFemurSegmentation/blob/main/images/netimage.png)
 
 
 ## Requirements
 There are some requirements to be satisfied for the correct functioning of the package, both in package dependencies, in folder structure for the data and in the naming of the subfolders representing the patients. 
-The provided Unet architecture works only with (256,256,depth) shaped volumes.
+This project is designed to work with input volume images of shape (512,512, depth). 
 
 ### Dependencies 
+* Python >= 3.7
 * numpy;
 * SimpleITK;
 * hypothesis;
@@ -100,9 +101,20 @@ The subfolders, for each patient, must contain **_Data_** and **_Segmentation_**
 This is due to the nature of the cropping during the preprocessing of the image.
 
 ## Installing
+```shell
+user@machine:~$ git clone https://github.com/federicocrovetti/SingleFemurUnetPipeline
+```
+
+```shell
+user@machine:~$ cd SingleFemurUnetPipeline
+```
+
+```shell
+user@machine:~$ python setup.py develop --user
+```
 
 
-## Working with 2DUnetFemurSegmentation
+## Working with SingleFemurUnetSegmentation
 This package is composed of multiple segments (as briefly explained in the [Overview](#overview) section) which allow for different kind of operations on the dataset under exam.
 The overall goal is twofold: to train a _FCN_ but mainly to be able to obtain a segmentation of the input femur CT, given an already trained _FCN_.
 Data input pipeline and Preprocessing is shared among the training and the prediction tasks, so we'll make a distinction only when it will arise.
