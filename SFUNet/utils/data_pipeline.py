@@ -4,7 +4,7 @@ import argparse
 from argparse import RawTextHelpFormatter
 import numpy as np
 from pathlib import Path
-from SFUNet.utils.dataload import DataLoad, NIFTISampleWriter, NIFTISingleSampleWriter, MDTransfer
+from SFUNet.utils.dataload import PathExplorer, DataLoad, NIFTISampleWriter, NIFTISingleSampleWriter, MDTransfer
 from SFUNet.utils.square_complete import SquareComplete
 
 
@@ -17,39 +17,47 @@ def Halve(dataset, side, train = True):
     side : list of binary ints 0 or 1, where 0 indicates the Right and 1 indicates the Left
     train : Str, optional. It determines if the function should be applied even on labels if those were 
     provided as part of the dataset object. The default is True.
-
     Returns
     -------
-    dataset_cropped : dict type object with 'features' and, optionally, 'labels' as keys containing 
-    only the right or the left part of the volume provided
-
+    dataset_cropped : dict type object with 'features' and, optionally, 'labels' as keys containing the first third of 
+    the right or the left part of the volume provided (depending on which side is labeled in the folder name)
+    
     """
+    
     if train == False:
         dataset_cropped =  {'features': []}
-        for i in range(len(dataset['features'])):
+        for i in range(round(len(dataset['features']))):
             if side[i] == 0:
                 data = dataset['features'][i][0 : 256, 0 : 512]
+                data = data[:,:, round(data.GetSize()[2]/3):512]
+                MDTransfer(dataset['features'][i], data)
+                dataset_cropped['features'].append(data)
+            elif side[i] == 1:
+                data = dataset['features'][i][256 : 512, 0 : 512]
+                data = data[:,:, round(data.GetSize()[2]/3):512]
                 MDTransfer(dataset['features'][i], data)
                 dataset_cropped['features'].append(data)
             else:
-                data = dataset['features'][i][256 : 512, 0 : 512]
-                MDTransfer(dataset['features'][i], data)
-                dataset_cropped['features'].append(data)
+                raise Exception('Cannot recognize if the leg intended is the right or left one. Please insert L or R in the folder name accordingly.')
         return dataset_cropped
     else:
         dataset_cropped =  {'features': [], 'labels':[]}
-        for i in range(len(dataset['features'])):
+        for i in range(round(len(dataset['features']))):
             if side[i] == 0:
                 data = dataset['features'][i][0 : 256, 0 : 512]
+                data = data[:,:, round(data.GetSize()[2]/3):512]
                 MDTransfer(dataset['features'][i], data)
                 labels = dataset['labels'][i][0 : 256, 0 : 512]
+                labels = labels[:,:, round(labels.GetSize()[2]/3):512]
                 MDTransfer(dataset['labels'][i], labels)
                 dataset_cropped['features'].append(data)
                 dataset_cropped['labels'].append(labels)
             elif side[i] == 1:
                 data = dataset['features'][i][256 : 512, 0 : 512]
+                data = data[:,:,round(data.GetSize()[2]/3):512]
                 MDTransfer(dataset['features'][i], data)
                 labels = dataset['labels'][i][256 : 512, 0 : 512]
+                labels = labels[:,:, round(labels.GetSize()[2]/3):512]
                 MDTransfer(dataset['labels'][i], labels)
                 dataset_cropped['features'].append(data)
                 dataset_cropped['labels'].append(labels)
@@ -67,12 +75,10 @@ def BedRemoval(dataset, train = True):
     dataset : dict type object with 'features' and, optionally, 'labels' as keys containins sitk.Image objects
     train : Str, optional. It determines if the function should be applied even on labels if those were 
         provided as part of the dataset object. The default is True.
-
     Returns
     -------
     data : dict type object with 'features' and, optionally, 'labels' as keys containing 
         only the right or the left part of the volume provided
-
     """
     thresh = sitk.BinaryThresholdImageFilter()
     thresh.SetInsideValue(1)
@@ -120,12 +126,10 @@ def Thresholding(dataset, threshold, train = True):
     threshold : list object containing the interval for thresholding
     train : Str, optional. It determines if the function returns a dict with a second key containing 
     the labels only if they were part of the dataset object. The default is True.
-
     Returns
     -------
     data : dict type object with 'features' and, optionally, 'labels' as keys containing
     binarized thresholded sitk.Image objects
-
     """
     thresh = sitk.BinaryThresholdImageFilter()
     thresh.SetInsideValue(1)
@@ -155,13 +159,11 @@ def BoundingBox(dataset):
     Parameters
     ----------
     dataset : dict type object with 'features' and 'labels' as keys containins sitk.Image objects
-
     Returns
     -------
-    bbox_list : list of lists for each image, for each slice, containing numpy arrays with: lower and upper bounderies along
+    bbox_list : list of lists for each image, for each slice, containing numpy arrays with: lower and upper boundaries along
                 x and y directions and lower and upper boundaries for a patch, with size (256, 256), centered on the bounding
                 box center
-
     """
 
     bbox_grouped =[]
@@ -171,9 +173,9 @@ def BoundingBox(dataset):
         crpfilter.SetGlobalDefaultCoordinateTolerance(7.21e-1)
         vol_box = []
         for j in range(int(dataset['features'][i].GetSize()[2])):
-            if any(dataset['features'][int(i)][:, :,j]): #any returns True if it sees 1    #ho cambiato labels con features
+            if any(dataset['features'][int(i)][:, :,j]):
                 crpfilter.Execute(dataset['features'][i][:, :, j], dataset['features'][i][:, :, j])    
-                boundingbox = crpfilter.GetBoundingBox(1)#np.array(crpfilter.GetBoundingBox(1))
+                boundingbox = crpfilter.GetBoundingBox(1)
                 
                 y_min = round(((boundingbox[3] - boundingbox[2])//2) + boundingbox[2] - 128)
                 y_max = round(((boundingbox[3] - boundingbox[2])//2) + boundingbox[2] + 128)
@@ -200,7 +202,6 @@ def BoundingBox(dataset):
 
 def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = False, train = True):
     """
-
     Parameters
     ----------
     dataset : dict type object with 'features' and 'labels' as keys containing the array form of the images and the labels
@@ -211,12 +212,10 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = False, tr
                         will return a dict type object with 'features' and 'labels' as keys containins sitk.Image objects
                         
                       if TRUE doesn't return anything and write directly the images into the specified folder
-
     Returns
     -------
     dataset_cropped : dict type object with 'features' and 'labels' as keys containins sitk.Image objects which are 
                       the cropped images and labels
-
     """
     if write_to_folder == False and train == True:
         dataset_cropped =  {'features': [], 'labels':[]}
@@ -355,10 +354,7 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = False, tr
 
 
 if __name__ == '__main__':
-    patients = []
-    data = []
-    masks = []
-    data_folders = []
+    
     
     parser = argparse.ArgumentParser(description = 
                                      '''Module for the cropping of the dataset capable of reading DICOM and NIFTI images.
@@ -405,7 +401,7 @@ if __name__ == '__main__':
                         metavar = 'high_end_threshold',
                         type = int,
                         help = 'high end threshold value')
-    
+#CAMBIO    
     parser.add_argument('write_to_folder',
                         metavar = 'write_to_folder',
                         type = bool,
@@ -415,12 +411,12 @@ if __name__ == '__main__':
                         metavar='train',
                         type = bool, 
                         help='True when we have labels (training phase), False when we do not. The default is True.')
-    
+#CAMBIO    
     parser.add_argument('--bbox_csv',
                         metavar = 'bbox_csv', 
                         type = str,
-                        help='Optional argument that allows to individuate the path of the CSV file into which the bounding box coordinates will be written')
-    
+                        help='Optional argument that allows to individuate the path of the .txt file into which the bounding box coordinates will be written')
+#NUOVO  
     parser.add_argument('--metadata_csv',
                         metavar = 'metadata_csv', 
                         type = str,
@@ -438,28 +434,9 @@ if __name__ == '__main__':
     
     basepath = Path(args.basepath)
     
+    patients, data_paths, masks_paths, data_folders = PathExplorer(basepath)
     
-    files_in_basepath = basepath.iterdir()
-    for item in files_in_basepath:
-        if item.is_dir():
-            if not item.name == '__pycache__' and not item.name == '.hypothesis' and not item.name == '_logdir_' and not item.name == 'Fedz' and not item.name == '.pytest_cache':
-                print(item.name)
-                data_folders.append(item.name)
-                path = basepath / '{}'.format(item.name)
-                patients.append(path)
-                
-    files_in_basepath = basepath.iterdir()
-    for item in files_in_basepath:
-        if item.is_dir():
-            if not item.name == '__pycache__' and not item.name == '.hypothesis' and not item.name == '_logdir_' and not item.name == 'Fedz' and not item.name == '.pytest_cache':
-                for elem in item.iterdir():
-                    if "Data" in elem.name:
-                        data.append(elem)
-                    elif "Segmentation" in elem.name:
-                        masks.append(elem)
-    
-    ID = data_folders
-    data, data_array= DataLoad(data, masks)  
+    ID = [[elem] for elem in data_folders]
     
     side = []
     for elem in data_folders:
@@ -469,24 +446,28 @@ if __name__ == '__main__':
             side.append(1)
         else:
             del(side)
-    dataset = BedRemoval(data, train=args.train)        
-    halve_dst = Halve(dataset, side, train = args.train)     
     
-    thresh_dst = Thresholding(halve_dst, [args.low_end_threshold, args.high_end_threshold], train = args.train)
-    label_sizes = BoundingBox(thresh_dst)
-    
-    Crop(halve_dst, label_sizes, ID, new_folder_path, write_to_folder = args.write_to_folder, train = args.train)
-    
-    if args.bbox_csv is not None:
-        with open(Path('{}'.format(args.bbox_csv)), 'w', newline='', encoding='UTF8') as f:
-            writer = csv.writer(f, delimiter=',')
-            for i in range(len(label_sizes)):
-                for j in range(len(label_sizes[i])):
-                    writer.writerow(label_sizes[i][j])
-                    
-    if args.metadata_csv is not None:
-        with open(Path('{}'.format(args.metadata_csv)), 'w', newline='', encoding='UTF8') as f:
-            writer = csv.writer(f, delimiter=',')
-            for i in range(len(data['features'])):
-                writer.writerow((dataset['features'][i].GetSpacing()[0], dataset['features'][i].GetSpacing()[1], dataset['features'][i].GetSpacing()[2],
-                                 dataset['features'][i].GetOrigin()[0], dataset['features'][i].GetOrigin()[1], dataset['features'][i].GetOrigin()[2]))
+    for i in range(len(data_folders)):
+        data, data_array= DataLoad(data_paths[i], masks_paths[i])
+        del(data_array)
+        dataset = BedRemoval(data, train=args.train)        
+        halve_dst = Halve(dataset, side, train = args.train)  
+        
+        thresh_dst = Thresholding(halve_dst, [args.low_end_threshold, args.high_end_threshold], train = args.train)
+        label_sizes = BoundingBox(thresh_dst)
+        Crop(halve_dst, label_sizes, ID[i], new_folder_path, write_to_folder = args.write_to_folder, train = args.train)
+        
+        if args.bbox_csv is not None:
+            with open(Path('{}'.format(args.bbox_csv)), 'a', newline='', encoding='UTF8') as f:
+                writer = csv.writer(f, delimiter=',')
+                for i in range(len(label_sizes)):
+                    for j in range(len(label_sizes[i])):
+                        writer.writerow(label_sizes[i][j])
+                       
+        if args.metadata_csv is not None:
+            with open(Path('{}'.format(args.metadata_csv)), 'a', newline='', encoding='UTF8') as f:
+                writer = csv.writer(f, delimiter=',')
+                for i in range(len(data['features'])):
+                    writer.writerow((dataset['features'][i].GetSpacing()[0], dataset['features'][i].GetSpacing()[1], dataset['features'][i].GetSpacing()[2],
+                                      dataset['features'][i].GetOrigin()[0], dataset['features'][i].GetOrigin()[1], dataset['features'][i].GetOrigin()[2]))
+            
