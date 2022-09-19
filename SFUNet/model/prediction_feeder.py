@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 #feeder for data to predict
 import tensorflow as tf
 import numpy as np
 
-class PredictionDataFeeder(tf.keras.utils.Sequence):
+class PredictionFeeder(tf.keras.utils.Sequence):
     """Helper to iterate over the data (as Numpy arrays)."""
 
     def __init__(self, batch_size, img_size, features_dataset):
@@ -22,6 +21,8 @@ class PredictionDataFeeder(tf.keras.utils.Sequence):
         x = np.zeros((self.batch_size,) + self.img_size + (1,), dtype="float32")
         for j in range(len(batch_input_data)):
             img = batch_input_data[j]
+            shift = (img + abs(np.min(img)))
+            img = np.divide(shift, np.max(shift))
             img = np.expand_dims(img, axis=-1)
             x[j] = img
         return x
