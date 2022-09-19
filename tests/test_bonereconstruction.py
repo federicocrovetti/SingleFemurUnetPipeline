@@ -1,5 +1,5 @@
 from SFUNet.utils.bonereconstruction import ReconstructionExtMetadata
-from SFUNet.utils.dataload import NiftiReader, SequentialLoader, PathExplorer
+from SFUNet.utils.dataload import NiftiReader, DataLoad, PathExplorer
 import SimpleITK as sitk 
 import csv
 import numpy as np
