@@ -1,23 +1,27 @@
-# -*- coding: utf-8 -*-
 #training
 
 import numpy as np
 from pathlib import Path
-from utils.dataload import DataLoad 
+from SFUNet.utils.dataload import DataLoad 
 import tensorflow as tf
 from SFUNet.model.feeder import ImageFeeder
 from SFUNet.model.model2D import model2D
-from SFUNet.utils.stackandsplit import NormDict, StackedData, Split
+from SFUNet.utils.slicer_utils import PathExplorerSlicedDataset
 import argparse
 from argparse import RawTextHelpFormatter
 
 
+def dice_coef(y_true, y_pred):
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    prod = y_true_f * y_pred_f
+    intersection = tf.experimental.numpy.sum(prod)
+    return (2. * intersection + smooth) / (tf.experimental.numpy.sum(y_true_f) + tf.experimental.numpy.sum(y_pred_f) + smooth)
+
+def dice_coef_loss(y_true, y_pred):
+    return 1 - dice_coef(y_true, y_pred)
+
 if __name__ == '__main__':
-    
-    patients = []
-    data = []
-    masks = []
-    data_folders = []
     
     parser = argparse.ArgumentParser(description = 
                                      '''Module for the training of 'model2D' Unet-like architecture. The user is to give the dataset in the required
@@ -33,22 +37,6 @@ if __name__ == '__main__':
     parser.add_argument('basepath', 
                         type = str, 
                         help='Path to the working directory in which the data is contained')
-    
-    parser.add_argument('img_size', 
-                        type = tuple, 
-                        help='Tuple containing the sizes of the images (sizes must be equal along X and Y axes)')
-    
-    parser.add_argument('trainperc', 
-                        type = float, 
-                        help='Percentage of the total data to be used for the training')
-    
-    parser.add_argument('validperc', 
-                        type = float, 
-                        help='Percentage of the total data to be used for the model validation')
-    
-    parser.add_argument('testperc', 
-                        type = float, 
-                        help='Percentage of the total data to be used for the testing')
     
     parser.add_argument('batch_size', 
                         type = int, 
@@ -71,55 +59,20 @@ if __name__ == '__main__':
     if args.basepath:
         basepath = Path(args.basepath) 
         
-
     
+    trainfeat, trainlab, valfeat, vallab, testfeat, testlab = PathExplorerSlicedDataset(basepath)
     
-    files_in_basepath = basepath.iterdir()
-    for item in files_in_basepath:
-        if item.is_dir():
-            if not item.name == '__pycache__' and not item.name == '.hypothesis':
-                print(item.name)
-                data_folders.append(item.name)
-                path = basepath / '{}'.format(item.name)
-                patients.append(path)
-                
-    files_in_basepath = basepath.iterdir()
-    for item in files_in_basepath:
-        if item.is_dir():
-            if not item.name == '__pycache__' and not item.name == '.hypothesis':
-                for elem in item.iterdir():
-                    if "Data" in elem.name:
-                        data.append(elem)
-                    elif "Segmentation" in elem.name:
-                        masks.append(elem)
-    
-    
-    dataset, dataset_array = DataLoad(data, masks)
-    del dataset
-    datatrain, dataval, datatest = Split(dataset_array, args.trainperc, args.valperc, args.testperc)
-    del dataset_array
-
-    train_dst = ImageFeeder(args.batch_size, args.img_size, datatrain['features'], datatrain['labels'])
-    val_dst = ImageFeeder(args.batch_size, args.img_size, dataval['features'], dataval['labels'])
+    train_set = ImageFeeder(args.batch_size, trainfeat, trainlab)
+    val_set = ImageFeeder(args.batch_size, valfeat, vallab)
     
     tf.keras.backend.clear_session()
-    model = model2D(args.img_size, 1)
-    model.summary()
-    import tensorflow.keras.backend as K
+    model = model2D((256, 256), 1)
     
+    import tensorflow.keras.backend as K
+    K.clear_session()
     lr = 1e-3
     smooth = 1e-6
 
-    def dice_coef(y_true, y_pred):
-        y_true_f = K.flatten(y_true)
-        y_pred_f = K.flatten(y_pred)
-        prod = y_true_f * y_pred_f
-        intersection = tf.experimental.numpy.sum(prod)
-        return (2. * intersection + smooth) / (tf.experimental.numpy.sum(y_true_f) + tf.experimental.numpy.sum(y_pred_f) + smooth)
-
-    def dice_coef_loss(y_true, y_pred):
-        return 1 - dice_coef(y_true, y_pred)
-    
     model.compile(optimizer=tf.keras.optimizers.Adam(lr), loss=dice_coef_loss,  metrics=[dice_coef]) 
     
     checkpoint_filepath = Path(args.ckptfile)
@@ -129,7 +82,6 @@ if __name__ == '__main__':
     mode='max', save_best_only=True)
     ]
     
-    model.fit(train_dst, epochs=args.epochs, validation_data = val_dst, callbacks=callbacks) 
+    model.fit(train_set, epochs=args.epochs, validation_data = val_set, callbacks=callbacks, shuffle=False) 
+    model.load_weights(checkpoint_filepath)
     model.save('{}'.format(args.trainedmod))
-
-
