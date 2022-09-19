@@ -6,10 +6,10 @@ from itertools import islice
 import argparse
 from argparse import RawTextHelpFormatter
 from pathlib import Path
-from SFUNet.utils.dataload import DataLoad, NIFTISampleWriter, NIFTISingleSampleWriter, MDTransfer
+from SFUNet.utils.dataload import PathExplorer, DataLoad, NIFTISampleWriter, NIFTISingleSampleWriter, MDTransfer
 
 
-def ReconstructionExtMetadata(data, ID, boundingbox, new_folder_path, md):
+def ReconstructionExtMetadata(data, ID, boundingbox, new_folder_path, md, train = False):
     """
     
     Parameters
@@ -21,37 +21,69 @@ def ReconstructionExtMetadata(data, ID, boundingbox, new_folder_path, md):
                     from the original image
     new_folder_path : the parent folder for the new data
     md : list containing the metadata of the original image (spacing x, y, z, origin x, y, z)
-
-
     """
-    for i in range(len(data['features'])):
-        print(data['features'][i].GetSize())
-    for i in range(len(data['features'])):
-        reconstructed = {'features' : []}
-        for j in range(len(boundingbox[i])):
-        
-            cut_feat = data['features'][i][:, :, j][:,:]
-            rec_slice_feat = sitk.Image(256, 512, sitk.sitkUInt8)
-            rec_slice_feat[0 : 256, int(boundingbox[i][j][4]) : int(boundingbox[i][j][5])] = cut_feat
-            rec_slice_feat.SetOrigin([-9.1640584e+01, -1.8851562e+02])
-   
-            reconstructed['features'].append(rec_slice_feat)
-        
-        join = sitk.JoinSeriesImageFilter()
-        join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
-        recon_volume = join.Execute([reconstructed['features'][k] for k in range(len(reconstructed['features']))])
-        recon_volume.SetSpacing((float(md[i][0]), float(md[i][1]), float(md[i][2])))
-        recon_volume.SetOrigin((float(md[i][3]), float(md[i][4]), float(md[i][5])))
     
-        NIFTISingleSampleWriter(recon_volume, ID[i], new_folder_path)
+   
+    if train == False:
+        for i in range(len(data['features'])):
+            print(data['features'][i].GetSize())
+        for i in range(len(data['features'])):
+            reconstructed = {'features' : []}
+            for j in range(len(boundingbox[i])):
+            
+                cut_feat = data['features'][i][:, :, j][:,:]
+                rec_slice_feat = sitk.Image(256, 512, sitk.sitkInt16)
+                rec_slice_feat[0 : 256, int(boundingbox[0][j][4]) : int(boundingbox[0][j][5])] = cut_feat #, y_min : y_max] = cut_feat
+                rec_slice_feat.SetOrigin([-9.1640584e+01, -1.8851562e+02])
+       
+                reconstructed['features'].append(rec_slice_feat)
+            
+            join = sitk.JoinSeriesImageFilter()
+            join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
+            recon_volume = join.Execute([reconstructed['features'][k] for k in range(len(reconstructed['features']))])
+            recon_volume.SetSpacing((float(md[i][0]), float(md[i][1]), float(md[i][2])))
+            recon_volume.SetOrigin((float(md[i][3]), float(md[i][4]), float(md[i][5])))
+        
+            NIFTISingleSampleWriter(recon_volume, ID, new_folder_path)
+            
+    elif train == True:
+        for i in range(len(data['features'])):
+            print(data['features'][i].GetSize())
+        for i in range(len(data['features'])):
+            reconstructed = {'features' : [], 'labels' : []}
+            for j in range(len(boundingbox[i])):
+                
+                print("{} iteration".format(j))
+                cut_feat = data['features'][i][:, :, j][:,:]
+                rec_slice_feat = sitk.Image(256, 512, sitk.sitkInt16)
+                MDTransfer(cut_feat, rec_slice_feat)
+                rec_slice_feat[0 : 256, int(boundingbox[0][j][4]) : int(boundingbox[0][j][5])] = cut_feat #, y_min : y_max] = cut_feat
+                rec_slice_feat.SetOrigin([-9.1640584e+01, -1.8851562e+02])
+        
+                cut_lab = data['labels'][i][:, :, j][:,:]
+                rec_slice_lab = sitk.Image(256, 512, sitk.sitkInt16)
+                MDTransfer(cut_lab, rec_slice_lab)
+                rec_slice_lab[0 : 256, int(boundingbox[0][j][4]) : int(boundingbox[0][j][5])] = cut_lab# y_min : y_max] = cut_lab
+                rec_slice_lab.SetOrigin([-9.1640584e+01, -1.8851562e+02])
+                reconstructed['features'].append(rec_slice_feat)
+                reconstructed['labels'].append(rec_slice_lab)
+            
+            join = sitk.JoinSeriesImageFilter()
+            join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
+            recon_volume = join.Execute([reconstructed['features'][k] for k in range(len(reconstructed['features']))])
+            recon_labels = join.Execute([reconstructed['labels'][k] for k in range(len(reconstructed['labels']))])
+            recon_volume.SetSpacing((float(md[0]), float(md[1]), float(md[2])))
+            recon_volume.SetOrigin((float(md[3]), float(md[4]), float(md[5])))
+            recon_labels.SetSpacing((float(md[0]), float(md[1]), float(md[2])))
+            recon_labels.SetOrigin((float(md[3]), float(md[4]), float(md[5])))
+            NIFTISampleWriter(recon_volume, recon_labels, ID, new_folder_path)
+    else:
+        pass
+        
     return
 
 
 if __name__ == '__main__':
-    patients = []
-    data = []
-    masks = []
-    data_folders = []
     
     parser = argparse.ArgumentParser(description = 
                                      '''Module for the cropping of the dataset capable of reading DICOM and NIFTI images.
@@ -89,6 +121,11 @@ if __name__ == '__main__':
                         type = str,
                         help = 'Path to the folder onto which the cropped samples will be written')
     
+    parser.add_argument('train', 
+                        metavar='train',
+                        type = bool, 
+                        help='True when we have labels (training phase), False when we do not. The default is True.')
+    
     parser.add_argument('csv_path', 
                         metavar='csv_path',
                         type = str, 
@@ -110,46 +147,34 @@ if __name__ == '__main__':
     
     basepath = Path(args.basepath)
     
+    patients, data_paths, masks_paths, data_folders = PathExplorer(basepath)
     
-    files_in_basepath = basepath.iterdir()
-    for item in files_in_basepath:
-        if item.is_dir():
-            if not item.name == '__pycache__' and not item.name == '.hypothesis' and not item.name == '_logdir_' and not item.name == 'Fedz' and not item.name == '.pytest_cache':
-                print(item.name)
-                data_folders.append(item.name)
-                path = basepath / '{}'.format(item.name)
-                patients.append(path)
+    ID = [[elem] for elem in data_folders]
+    
+    img_sizes = []
+    for i in range(len(data_folders)):
+        bounding_box = []
+        data, data_array= DataLoad(data_paths[i], masks_paths[i]) 
+        del(data_array)
+        img_sizes.append(data['features'][0].GetSize()[2])
+        with open(Path('{}'.format(args.csv_path)), 'r', newline='', encoding='UTF8') as f:
+            reader = csv.reader(f, delimiter=',')
+            lines = []
+            for row in reader:
+                lines.append(row)
+            
+            if i == 0:
+                a = lines[0:(img_sizes[i] )]
+                bounding_box.append(a)
+            else:
+                bounding_box.append(lines[img_sizes[i-1]:(img_sizes[i-1]+img_sizes[i])]) #-1
                 
-    files_in_basepath = basepath.iterdir()
-    for item in files_in_basepath:
-        if item.is_dir():
-            if not item.name == '__pycache__' and not item.name == '.hypothesis' and not item.name == '_logdir_' and not item.name == 'Fedz' and not item.name == '.pytest_cache':
-                for elem in item.iterdir():
-                    if "Data" in elem.name:
-                        data.append(elem)
-                    elif "Segmentation" in elem.name:
-                        masks.append(elem)
-    
-    ID = data_folders
-    dataset, dataset_array = DataLoad(data, masks)
-    
-    img_sizes = [dataset['features'][i].GetSize()[2] for i in range(len(dataset['features']))]
-    bounding_box_list = []
-    with open(Path('{}'.format(args.csv_path)), 'r', newline='', encoding='UTF8') as f:
-        reader = csv.reader(f, delimiter=',')
-        for row in reader:
-            bounding_box_list.append(row)
-    
-    metadata_list = []
-    with open(Path('{}'.format(args.metadata_path)), 'r', newline='', encoding='UTF8') as f:
-        reader = csv.reader(f, delimiter=',')
-        for row in reader:
-            metadata_list.append(row)
- 
-    
-    iterator = iter(bounding_box_list)
-    bounding_box_grouped = [list(islice(iterator, elem))
-          for elem in img_sizes]
-                
-    ReconstructionExtMetadata(dataset, ID, bounding_box_grouped, new_folder_path, metadata_list)
-
+        metadata_list = []
+        img_metadata = []
+        with open(Path('{}'.format(args.metadata_path)), 'r', newline='', encoding='UTF8') as f:
+            reader = csv.reader(f, delimiter=',')
+            for row in reader:
+                metadata_list.append(row)
+        img_metadata.append(metadata_list[i])
+        
+        ReconstructionExtMetadata(data, ID[i], bounding_box, new_folder_path, img_metadata, train = args.train)
