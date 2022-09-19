@@ -309,4 +309,45 @@ def SliceDatasetLoader(data_path, masks_path):
 
 
 if __name__ == '__main__':
-    pass
+    parser = argparse.ArgumentParser(description = 
+                                     '''M
+                                         '''
+                                         , formatter_class=RawTextHelpFormatter)
+    parser.add_argument('basepath', 
+                        metavar='basepath',
+                        type = str, 
+                        help='Path to the working directory in which the data is contained')
+    
+    parser.add_argument('new_folder_path',
+                        metavar = 'new_folder_path',
+                        type = str,
+                        help = 'Path to the folder onto which the cropped samples will be written')
+    
+    parser.add_argument('train_perc',
+                        metavar = 'train_perc',
+                        type = int,
+                        help = 'Number of patients for training')
+    
+    parser.add_argument('val_perc',
+                        metavar = 'val_perc',
+                        type = int,
+                        help = 'Number of patients for validation')
+    
+    parser.add_argument('test_perc',
+                        metavar = 'test_perc',
+                        type = int,
+                        help = 'Number of patients for testing')
+    
+    
+    args = parser.parse_args() 
+    
+    new_folder_path = Path(args.new_folder_path)
+    if new_folder_path.exists():
+        pass
+    else:
+        new_folder_path.mkdir(exist_ok=True) 
+    
+    basepath = Path(args.basepath)
+    new_folder_path = Path(args.new_folder_path)
+   
+    DatasetSlicerReorganizer(basepath, new_folder_path, args.train_perc, args.val_perc, args.test_perc)
