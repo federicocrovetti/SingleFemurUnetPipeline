@@ -1,16 +1,15 @@
-# -*- coding: utf-8 -*-
 #calling the trained network for predictions
 
 import tensorflow as tf
-import SimpleITK as sitk
 import numpy as np
+import SimpleITK as sitk
 from pathlib import Path
 import csv
 import argparse
 from argparse import RawTextHelpFormatter
-from SFUNet.utils.dataload import DataLoad, NIFTISingleSampleWriter
-from SFUNet.model.prediction_feeder import PredictionDataFeeder
-from SFUNet.utils.stackandsplit import NormDict, StackedData, Split
+from sequential_feeder import PredictionFeeder
+from SFUNet.utils.slicer_utils import PathExplorerSlicedDataset, SliceDatasetLoader, NIFTISlicesWriter 
+from dataload import PathExplorer, DataLoad, MDTransfer, NIFTISingleSampleWriter 
 from IPython.display import display
 import tensorflow.keras.backend as K
 
@@ -67,39 +66,22 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     
-    if args.basepath:
-        basepath = Path(args.basepath) 
-    
-    files_in_basepath = basepath.iterdir()
-    for item in files_in_basepath:
-        if item.is_dir():
-            if not item.name == '__pycache__' and not item.name == '.hypothesis' and not item.name == '_logdir_' and not item.name == 'Fedz' and not item.name == '.pytest_cache':
-                print(item.name)
-                data_folders.append(item.name)
-                path = basepath / '{}'.format(item.name)
-                patients.append(path)
-                
-    files_in_basepath = basepath.iterdir()
-    for item in files_in_basepath:
-        if item.is_dir():
-            if not item.name == '__pycache__' and not item.name == '.hypothesis' and not item.name == '_logdir_' and not item.name == 'Fedz' and not item.name == '.pytest_cache':
-                for elem in item.iterdir():
-                    if "Data" in elem.name:
-                        data.append(elem)
-                    elif "Segmentation" in elem.name:
-                        masks.append(elem)
-    
-    ID = data_folders
-    
-    data, data_array = DataLoad(data, masks)
-    data = StackedData(data_array)
-    data = NormDict(data)
-    del(data_array)
-    
+    basepath = Path(args.basepath)
+    new_folder_path = Path(args.new_folder_path)
+        
+    if new_folder_path.exists():
+        pass
+    else:
+        new_folder_path.mkdir(exist_ok=True) 
+           
+    patients, data, masks, data_folders = PathExplorer(basepath)
+        
+    dataset, dataset_array = DataLoad(data, masks)
+    print(dataset_array)
+    print(dataset_array['features'].shape)
+    test_set = PredictionFeeder(args.batch_size, dataset_array['features'])
     model = tf.keras.models.load_model('{}'.format(args.network), custom_objects= {'dice_coef_loss' : dice_coef_loss, 'dice_coef': dice_coef})
-    
-    test_gen = PredictionDataFeeder(args.batch_size, (256,256), data['features'])
-    val_preds = model.predict(test_gen)
+    val_preds = model.predict(test_set)
     
     if args.write_to_folder == True:
         new_folder_path = Path(args.new_folder_path)
@@ -107,12 +89,10 @@ if __name__ == '__main__':
             pass
         else:
             new_folder_path.mkdir(exist_ok=True) 
-           
+            
         val_preds = (val_preds > 0.5).astype(np.uint8)
         preds = sitk.GetImageFromArray(val_preds)
-        NIFTISingleSampleWriter(preds, ID, new_folder_path)
-        
+
+        NIFTISingleSampleWriter(preds, 0000, new_folder_path)
     else:
         pass
-    
-    
