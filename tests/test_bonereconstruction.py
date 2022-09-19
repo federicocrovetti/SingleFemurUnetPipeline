@@ -61,7 +61,7 @@ def test_ReconstructionExtMetadata(gen, IDs, new_folder_paths):
     
     patients, data_paths, masks_paths, data_folders = PathExplorer(new_folder_path)
     for i in range(len(data_paths)):
-        dataset, dataset_array = SequentialLoader(data_paths[i], masks_paths[i])
+        dataset, dataset_array = DataLoad(data_paths[i], masks_paths[i])
         fac_simile = sitk.Image(256, 512, 40, sitk.sitkInt16)
         fac_simile[:,0:256,:] = 1
         fac_simile[90:120, 90:120, :] = 2
