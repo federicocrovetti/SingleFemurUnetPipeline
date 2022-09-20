@@ -11,6 +11,50 @@
 * [Working with 2DUnetFemurSegmentation](#working-with-2dunetfemursegmentation)
 * [Workflows](#workflows)
 
+## Update
+
+A new pipeline for the handling of data has been added. Data can now be rewritten into a new folder structure (as in the scheme below) where the first third of each 
+original volume image is decomposed into a series of Nifti images. The same for the labels. 
+This was done in order to diminish the load on the RAM during the training process and to allow the mixture between samples, in order to strenghten the consistency of
+network training. 
+
+```
+New Parent Foler
+    ├── TrainFeatures
+    │   ├── patient1Slice1Data
+    |   |
+    |   |
+    |   ├── patient01SliceNData
+    |   |
+    │   |
+    |   ├── patientNSliceNData
+    |   |
+    ├── TrainLabels
+    │   ├── patient1Slice1Labels
+    |   |
+    |   |
+    |   ├── patient01SliceNLabels
+    |   |
+    │   |
+    |   ├── patientNSliceNLabels
+    .
+    ├── ValFeatures
+    .
+    ├── ValLabels
+    .
+    ├── TestFeatures
+    .
+    ├── TestLabels
+    .
+    .
+    .
+ ```
+
+Also,  the scripts where adapted to the new data loading strategy, namely a sequential one, where each image/slice is read and feed one at time to the scripts, rather
+than loading the whole dataset in one go at the beginning.
+It is to be noted that this addition doesn't change anything in the previously deployed pipelines (namely pre-post workflows and prediction), since it's a process that
+can be applyed directly on the dataset previously cropped and holds no significant dependencies nor connections with other scripts. 
+
 ## Overview
 
 This package provides an end-to-end pipeline, working with 3D CT scans, both for the training of the designed Neural Netork architecture and for the prediction on new data. The predicted segmentation can also be extracted and written to a NIFTI file.
