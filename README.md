@@ -158,7 +158,7 @@ user@machine:~$ python setup.py develop --user
 ```
 
 
-## Working with SingleFemurUnetSegmentation
+## Working With SingleFemurUnetSegmentation
 This package is composed of multiple segments (as briefly explained in the [Overview](#overview) section) which allow for different kind of operations on the dataset under exam.
 The overall goal is twofold: to train a _FCN_ but mainly to be able to obtain a segmentation of the input femur CT, given an already trained _FCN_.
 Data input pipeline and Preprocessing is shared among the training and the prediction tasks, so we'll make a distinction only when it will arise.
@@ -175,6 +175,11 @@ One can choose to not write cropped images, even if it would be convenient for i
 It's also to be noticed, since it will be the same every time we will have to identify a folder, that the path choosen for the processed images will identify a parent folder where files will be written following a disposition as that of [Folder Structure](#folder-structure). 
 Each patient/sample folder, and each subsequent subfolder, will carry on the name of the folder in the original dataset, preceded by the root _'mod'_.
 
+### Formatting The Dataset For Training
+```shell
+user@machine:~$ python path_to_file\slicer_utils.py path_to_dataset_folder path_to_folder_reorganized_dataset n0_samples_training n0_samples_validation n0_samples_testing
+```
+With this command the dataset will be rewritten into six folders, contained into the new choosen path. There will be folders, both for images and labels, for training, validation and testing samples: each one will contain all of the images (or labels) choosen for the destination of use, written into a single Nifti image for each slice composing the upper third of the original images, stacked into the same folder.
 
 ### Training
 ```shell
