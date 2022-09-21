@@ -8,10 +8,17 @@ import hypothesis.strategies as st
 
 #STRATEGIES
 
+legitimate_chars = st.characters(whitelist_categories=('Lu','Ll')
+                                    ,min_codepoint=65, max_codepoint=90)
+
+text_strategy = st.text(alphabet=legitimate_chars, min_size=5,
+                            max_size=30)
+
+
 @st.composite
 def dataset_generator(draw):
     dataset = {'features' : [], 'labels' : []}
-    side = draw(st.lists(st.integers(0,1), min_size = 1, max_size = 3)) #[0,1]
+    side = draw(st.lists(st.integers(0,1), min_size = 1, max_size = 3))
     for i in range(len(side)):
         origin = draw(st.tuples(*[st.floats(0., 100.)] * 3))
         spacing = draw(st.tuples(*[st.floats(.1, 1.)] * 3))
@@ -36,8 +43,8 @@ def dataset_generator(draw):
         dataset['labels'].append(labels)
     
     return (dataset, side) 
-    
-    
+
+
 @st.composite
 def BedImageGenerator(draw):
     dataset = {'features' : [], 'labels' : []}
@@ -54,7 +61,6 @@ def BedImageGenerator(draw):
         feat_confront.SetSpacing(spacing)
         feat_confront.SetDirection(direction)
         dataset_confront['features'].append(feat_confront)
-        #bed insertion
         height = draw(st.integers(min_value = 2, max_value = 20))
         y = draw(st.integers(min_value = 0, max_value = (200-height)))
         feat_arr[:, y:(y+height), 100:450] = np.full((40, height, 350), 1)
@@ -78,14 +84,14 @@ def BedImageGenerator(draw):
         dataset_confront['features'].append(labels)
         
     return (dataset, dataset_confront, side) 
-    
-    
+
+
 @st.composite
 def crop_set_generator(draw):
     dataset = {'features' : [], 'labels' : []}
     dims = []
     shapes = []
-    side = draw(st.lists(st.integers(0,1), min_size = 1, max_size = 3)) #[0,1]
+    side = draw(st.lists(st.integers(0,1), min_size = 1, max_size = 3))
     for i in range(len(side)):
         origin = draw(st.tuples(*[st.floats(0., 100.)] * 3))
         spacing = draw(st.tuples(*[st.floats(.1, 1.)] * 3))
@@ -95,6 +101,7 @@ def crop_set_generator(draw):
         z_min = draw(st.integers(0, 38))
         z_max = draw(st.integers(z_min + 1, 40))
         shape = (z_min, z_max, y_min, y_max, 0, 256)
+        #print(shape)
         features = np.zeros((40, 512, 256))
         features[shape[0] : shape[1], shape[2]:shape[3], shape[4]:shape[5]] = np.full((np.abs(shape[1] - shape[0]), np.abs(shape[3] - shape[2]), np.abs(shape[5] - shape[4])), 1)
         if side[i] == 0:
@@ -124,14 +131,8 @@ def crop_set_generator(draw):
         dims.append(dims_i)
     
     return (dataset, shapes, dims)
-    
-legitimate_chars = st.characters(whitelist_categories=('Lu','Ll'),
-                                    min_codepoint=65, max_codepoint=90)
 
-text_strategy = st.text(alphabet=legitimate_chars, min_size=5,
-                            max_size=30)
-    
-#TESTS
+
 
 @given(dataset_generator())
 @settings(suppress_health_check=[hp.HealthCheck.too_slow], max_examples=50, deadline = None)
@@ -147,15 +148,15 @@ def test_Halve(gen):
     
 @given(dataset_generator(), st.integers(0, 50), st.integers(50, 200))
 @settings(suppress_health_check=[hp.HealthCheck.too_slow], max_examples=50, deadline = None)
-def test_Thresholding(gen, low_threshold, high_threshold):#, train = True):
+def test_Thresholding(gen, low_threshold, high_threshold):
     dst = gen[0]
     threshold = [low_threshold, high_threshold]
-    thres_dst = Thresholding(dst, threshold)#, train = True)
+    thres_dst = Thresholding(dst, threshold)
     for i in range(len(thres_dst['features'])):
         img_arr = sitk.GetArrayFromImage(thres_dst['features'][i])
         assert(np.any((img_arr == 0)) and np.any((img_arr == 1)))
-    
-    
+
+
 @given(BedImageGenerator())
 @settings(suppress_health_check=[hp.HealthCheck.too_slow], max_examples=50, deadline = None)
 def test_BedRemoval(gen):
@@ -163,9 +164,10 @@ def test_BedRemoval(gen):
     no_bed = BedRemoval(dst)
     for i in range(len(gen[0]['features'])):
         arr_nobed_img = sitk.GetArrayFromImage(no_bed['features'][i])
-        assert(np.sum(arr_nobed_img[0:512, 0:199, 0:40]) == 0)  
-    
-    
+        assert(np.sum(arr_nobed_img[0:512, 0:199, 0:40]) == 0)
+
+
+
 @given(crop_set_generator(), text_strategy)
 @settings(suppress_health_check=[hp.HealthCheck.too_slow], max_examples=2, deadline = None)
 def test_Crop(dst_gen, IDstr):
@@ -174,13 +176,10 @@ def test_Crop(dst_gen, IDstr):
     bbox_grouped = dst_gen[1]
     ID = IDstr
     
-    crop_dst = Crop(dataset, bbox_grouped, ID, new_folder_path)#, write_to_folder = False, train = True, reconstruction_files = None)
+    crop_dst = Crop(dataset, bbox_grouped, ID, new_folder_path)
     
     for i in range(len(crop_dst['features'])):
         assert(crop_dst['features'][i].GetSize()[0] == 256)
         assert(crop_dst['features'][i].GetSize()[1] == 256)
         assert(crop_dst['labels'][i].GetSize()[0] == 256)
         assert(crop_dst['labels'][i].GetSize()[1] == 256)
-       
-    
-    
