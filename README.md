@@ -11,6 +11,50 @@
 * [Working with 2DUnetFemurSegmentation](#working-with-2dunetfemursegmentation)
 * [Workflows](#workflows)
 
+## Update
+
+A new pipeline for the handling of data has been added. Data can now be rewritten into a new folder structure (as in the scheme below) where the first third of each 
+original volume image is decomposed into a series of Nifti images. The same for the labels. 
+This was done in order to diminish the load on the RAM during the training process and to allow the mixture between samples, in order to strenghten the consistency of
+network training. 
+
+```
+New Parent Foler
+    ├── TrainFeatures
+    │   ├── patient1Slice1Data
+    |   |
+    |   |
+    |   ├── patient01SliceNData
+    |   |
+    │   |
+    |   ├── patientNSliceNData
+    |   |
+    ├── TrainLabels
+    │   ├── patient1Slice1Labels
+    |   |
+    |   |
+    |   ├── patient01SliceNLabels
+    |   |
+    │   |
+    |   ├── patientNSliceNLabels
+    .
+    ├── ValFeatures
+    .
+    ├── ValLabels
+    .
+    ├── TestFeatures
+    .
+    ├── TestLabels
+    .
+    .
+    .
+ ```
+
+Also,  the scripts where adapted to the new data loading strategy, namely a sequential one, where each image/slice is read and feed one at time to the scripts, rather
+than loading the whole dataset in one go at the beginning.
+It is to be noted that this addition doesn't change anything in the previously deployed pipelines (namely pre-post workflows and prediction), since it's a process that
+can be applyed directly on the dataset previously cropped and holds no significant dependencies nor connections with other scripts. 
+
 ## Overview
 
 This package provides an end-to-end pipeline, working with 3D CT scans, both for the training of the designed Neural Netork architecture and for the prediction on new data. The predicted segmentation can also be extracted and written to a NIFTI file.
@@ -163,7 +207,7 @@ user@machine:~$ python path_to_file\bonereconstruction.py path_to_data_folder pa
 ```mermaid
 graph TD;
     subgraph Data Cropping;
-    A["DataLoad (Loading of full dataset, or of a single patient)"] --> B["BedRemoval (Removal of the bed, which may alter the bounding box)"];
+    A["DataLoad"] --> B["BedRemoval (Removal of the bed, which may alter the bounding box)"];
     B["BedRemoval (Removal of the bed, which may alter the bounding box)"]--> C["Halve (From each image is conserved only the Right of Left part)"];
     C["Halve (From each image is conserved only the Right of Left part)"]--> D["Thresholding (Binary thresholding)"];
     D["Thresholding (Binary thresholding)"]--> E["BoundingBox (Bounding box for each slice, for each volume image)"];
@@ -173,29 +217,32 @@ graph TD;
     F["Crop (For each slice a (256,256) patch, centered about the center of the bounding box)"]-->H["Written to a folder (write_to_folder = True)"];
     end;
     subgraph Bone Reconstruction;
-    L["DataLoad (Loading of full dataset, or of a single patient)"] --> M["Reconstruction (Stacking and alignment of previously cropped (and misaligned) slices from the images)"];
+    L["DataLoad"] --> M["Reconstruction (Stacking and alignment of previously cropped (and misaligned) slices from the images)"];
     N["CSV Reader (reading of previously stored list of bounding boxes"] --> M["Reconstruction (Stacking and alignment of previously cropped (and misaligned) slices from the images)"];
     M["Reconstruction (Stacking and alignment of previously cropped (and misaligned) slices from the images)"] --> O["NIFTISampleWriter (Reconstructed image is written in a NIFTI file at the desired Path )"];
     end;
 ```
+
+## Sliced Dataset Workflow
+```mermaid
+graph TD;
+    A["DataLoad"]--> B["DatasetSlicerReorganizer"];
+    B["DatasetSlicerReorganizer"]--> C["NiftiSlicesWriter"];
+    C["NiftiSlicesWriter"]--> D["Train-Val-Test/Features-Labels Folders"]
+```
+
 ## Training and Prediction Workflows
 ```mermaid
 graph TD;
     subgraph Train;
-    A["DataLoad (Loading of full dataset, or of a single patient)"] --> B["StackedData (Unpacking of the input volume images. The slices composing them are stacked together)"];
-    B["StackedData (Unpacking of the input volume images. The slices composing them are stacked together)"] --> C["NormDict (Normalization in the range [0,1] of the pixels composing the slices"];
-    C["NormDict (Normalization in the range [0,1] of the pixels composing the slices"] --> D["Split (Splitting of the stacked dataset into Train, Validation and Test sets)"];
-     D["Split (Splitting of the stacked dataset into Train, Validation and Test sets)"] --> E["ImageFeeder (class inheriting from tf.keras.sequence for data feeding)"];
-     E["ImageFeeder (class inheriting from tf.keras.sequence for data feeding"] --> F["Unet fitting"];
-     G["dice_coef, dice_loss"] --> F["Unet fitting"];
-     F["Unet fitting"] --> H["Model and Callbacks saving"];
+    A["SliceDatasetLoader"] --> B["ImageFeeder (class inheriting from tf.keras.sequence for data feeding"] --> C["Unet fitting"];
+    D["dice_coef, dice_loss"] --> C["Unet fitting"];
+    C["Unet fitting"] --> E["Model and Callbacks saving"];
     end;
     subgraph Predict
-    I["DataLoad (Loading of full dataset, or of a single patient)"] --> L["StackedData (Unpacking of the input volume images. The slices composing them are stacked together)"];
-    L["StackedData, NormDict (Unpacking of the input volume images. The slices composing them are stacked together, then all of them are normalized in the [0,1] range)"] --> M["PredictionDataFeeder (class inheriting from tf.keras.sequence for data feeding)"];
-    M["PredictionDataFeeder (class inheriting from tf.keras.sequence for data feeding)"] --> N["Unet predict"];
-    O["dice_coef, dice_loss"] --> N["Unet predict"];
-    N["Unet predict"] --> P["NIFTISampleWriter (predicted segmentations are written in the desired path)"];
+    F["DataLoad"] --> G["PredictionDataFeeder (class inheriting from tf.keras.sequence for data feeding)"] --> H["Unet predict"];
+    I["dice_coef, dice_loss"] --> H["Unet predict"];
+    H["Unet predict"] --> L["NIFTISampleWriter (predicted segmentations are written in the desired path)"];
     end
 ```
 
