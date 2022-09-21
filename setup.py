@@ -92,7 +92,7 @@ setup(
 
     classifiers=[
         "Programming Language :: Python :: 3",
-        Operating System :: POSIX :: Linux
+        #Operating System :: POSIX :: Linux
         Operating System :: Microsoft :: Windows :: Windows 10
         Operating System :: Microsoft :: Windows :: Windows 11
         Environment :: MacOS X :: Aqua
