@@ -92,7 +92,12 @@ setup(
 
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Operating System :: OS Independent"
+        Operating System :: POSIX :: Linux
+        Operating System :: Microsoft :: Windows :: Windows 10
+        Operating System :: Microsoft :: Windows :: Windows 11
+        Environment :: MacOS X :: Aqua
+        Environment :: MacOS X :: Carbon
+        Environment :: MacOS X :: Cocoa
     ],
     python_requires='>=3.7.11',
     license = 'MIT'
