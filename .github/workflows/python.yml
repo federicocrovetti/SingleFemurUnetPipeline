@@ -2,9 +2,9 @@ name: SFUNet CI
 
 on:
   push:
-    branches: [ master, main]
+    branches: [ main]
   pull_request:
-    branches: [ master, main]
+    branches: [ main]
 
 jobs:
   build:
@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.7.11, 3.8]
+        python-version: [3.7, 3.7.11, 3.8, 3.10]
 
     steps:
     - uses: actions/checkout@v2
