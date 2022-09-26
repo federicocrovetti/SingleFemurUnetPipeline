@@ -154,7 +154,7 @@ def test_Thresholding(gen, low_threshold, high_threshold):
     thres_dst = Thresholding(dst, threshold)
     for i in range(len(thres_dst['features'])):
         img_arr = sitk.GetArrayFromImage(thres_dst['features'][i])
-        assert(np.any((img_arr == 0)) and np.any((img_arr == 1)))
+        assert(np.any((img_arr == 0)) or np.any((img_arr == 1)))
 
 
 @given(BedImageGenerator())
