@@ -8,6 +8,7 @@ import hypothesis.strategies as st
 from SFUNet.utils.dataload import NiftiReader, NIFTISampleWriter
 from SFUNet.utils.slicer_utils import PathExplorerSlicedDataset, NIFTISlicesWriter, DatasetSlicerReorganizer, SliceDatasetLoader    
 
+#Nomenclature for the redistribution of the sliced data
 sets = ['Train', 'Val', 'Test']
 
 legitimate_chars = st.characters(whitelist_categories=('Lu','Ll')
@@ -18,6 +19,9 @@ text_strategy = st.text(alphabet=legitimate_chars, min_size=5,
 
 @st.composite
 def slice_image_generator(draw):
+  """
+  Strategy for the generation of a single 2D slice
+  """
     origin = draw(st.tuples(*[st.floats(0., 100.)] * 2))
     spacing = draw(st.tuples(*[st.floats(.1, 1.)] * 2))
     direction = tuple([1., 0., 0., 1.])
@@ -32,6 +36,9 @@ def slice_image_generator(draw):
 
 @st.composite
 def image_generator(draw):
+  """
+  Strategy for the generation of a 3D image
+  """
     origin = draw(st.tuples(*[st.floats(0., 100.)] * 3))
     spacing = draw(st.tuples(*[st.floats(.1, 1.)] * 3))
     direction = tuple([1., 0., 0., 0., 1., 0., 0., 0., 1.])
@@ -45,8 +52,12 @@ def image_generator(draw):
     return image
 
 @settings(suppress_health_check=[hp.HealthCheck.too_slow], max_examples=2, deadline = None)
-@given(image_generator(), image_generator(), text_strategy, text_strategy, st.sampled_from(sets))#st.lists(sets, min_size=1,max_size=1))#random.choice(sets)) 
+@given(image_generator(), image_generator(), text_strategy, text_strategy, st.sampled_from(sets))#st.lists(sets, min_size=1,max_size=1)) 
 def test_NIFTISlicesWriter(datas, labelss, IDs, new_folder_paths, destinations):
+  """
+  Starting fro a 3D input image, we test the capability of NIFTISlicesWriter to write the input image,
+  slice by slice, in the newly created folders identified by the prefix sampled from 'sets'.
+  """
     data = datas
     labels = labelss
     ID = IDs
@@ -73,6 +84,11 @@ def test_NIFTISlicesWriter(datas, labelss, IDs, new_folder_paths, destinations):
 @settings(suppress_health_check=[hp.HealthCheck.too_slow, hp.HealthCheck.filter_too_much], max_examples=10, deadline = None)   
 @given(image_generator(), image_generator(), text_strategy, text_strategy, st.sampled_from(sets))
 def test_DatasetSlicerReorganizer(datas, labelss, IDs, new_folder_paths, destinations):
+  """
+  Testing that DatasetSlicerReorganizer, starting from a parent folder with a single sample, 
+  is capable of writing a new parent folder, with the structure given in the Readme, with 
+  the original image sliced and contained in the proper Train-Val-Test folder.
+  """
     
     data = datas
     labels = labelss
@@ -116,6 +132,10 @@ def test_DatasetSlicerReorganizer(datas, labelss, IDs, new_folder_paths, destina
 @given(image_generator(), image_generator(), st.integers(), st.integers(), st.integers(), text_strategy, text_strategy)
                            
 def test_SliceDatasetLoader(datas, labelss, train_samps, val_samps, test_samps, IDs, new_folder_paths):
+  """
+  Testing that the 2D images loaded sequentially by SliceDatasetLoader correspond to the appropriate
+  section (along x and y) of the original 3D image.
+  """
     
     data = datas
     labels = labelss
