@@ -17,6 +17,10 @@ text_strategy = st.text(alphabet=legitimate_chars, min_size=5,
 
 @st.composite
 def dataset_generator(draw):
+  """
+  Strategy for the generation of a dict object with a 3D image for features and labels keys.
+  The size of them is the one with which the program will work with (512,512,z).
+  """
     dataset = {'features' : [], 'labels' : []}
     side = draw(st.lists(st.integers(0,1), min_size = 1, max_size = 3))
     for i in range(len(side)):
@@ -47,6 +51,11 @@ def dataset_generator(draw):
 
 @st.composite
 def BedImageGenerator(draw):
+  """
+  Strategy for the generation of a dict object with a 3D image for features and labels keys.
+  The size of them is the one with which the program will work with (512,512,z).
+  Those images contain the main volume and a thin separated element.
+  """
     dataset = {'features' : [], 'labels' : []}
     dataset_confront = {'features' : [], 'labels' : []}
     side = draw(st.lists(st.integers(0,1), min_size = 1, max_size = 3))
@@ -88,6 +97,17 @@ def BedImageGenerator(draw):
 
 @st.composite
 def crop_set_generator(draw):
+  """
+  Strategy for the generation of a dict object with a 3D image for features and labels keys. 
+  Images contained in this dict, both for features and labels, are of the shape (256,512,z),
+  containing an object with random but limited size. 
+  This object will be at maximum (256,256) along x & y axis (x dimension is fixed to 256), and will be placed at a random
+  height on y axis.
+  
+  In addition, this strategy generates two lists of arrays:
+    - shapes contain the arrays composed by minimum and maximum points of the image extension for each axis (z, y, x), for each slice;
+    - dims contain the shape of the 3D image.
+  """
     dataset = {'features' : [], 'labels' : []}
     dims = []
     shapes = []
