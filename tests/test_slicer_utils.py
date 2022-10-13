@@ -115,18 +115,18 @@ def test_DatasetSlicerReorganizer(datas, labelss, IDs, new_folder_paths, destina
       assert (img.GetSize() == data[:,:,0].GetSize())
       assert (len(trainfeat) == datalen)
       assert (len(trainmasks) == datalen)
-   elif val_samp != 0:
-     for i in range(len(valfeat)):
-        img = NiftiReader(valfeat[i])[0]
-        assert (img.GetSize() == data[:,:,0].GetSize())
-        assert (len(valfeat) == datalen)
-        assert (len(valmasks) == datalen)
-   elif test_samp != 0:
-      for i in range(len(testfeat)):
-        img = NiftiReader(testfeat[i])[0]
-        assert (img.GetSize() == data[:,:,0].GetSize())
-        assert (len(testfeat) == datalen)
-        assert (len(testmasks) == datalen)
+  elif val_samp != 0:
+    for i in range(len(valfeat)):
+      img = NiftiReader(valfeat[i])[0]
+      assert (img.GetSize() == data[:,:,0].GetSize())
+      assert (len(valfeat) == datalen)
+      assert (len(valmasks) == datalen)
+  elif test_samp != 0:
+    for i in range(len(testfeat)):
+      img = NiftiReader(testfeat[i])[0]
+      assert (img.GetSize() == data[:,:,0].GetSize())
+      assert (len(testfeat) == datalen)
+      assert (len(testmasks) == datalen)
     
 @settings(suppress_health_check=[hp.HealthCheck.too_slow], max_examples=2, deadline = None)
 @given(image_generator(), image_generator(), st.integers(), st.integers(), st.integers(), text_strategy, text_strategy)
@@ -136,37 +136,36 @@ def test_SliceDatasetLoader(datas, labelss, train_samps, val_samps, test_samps, 
   Testing that the 2D images loaded sequentially by SliceDatasetLoader correspond to the appropriate
   section (along x and y) of the original 3D image.
   """
+  data = datas
+  labels = labelss
+  ID = IDs
+  train_samp = train_samps
+  val_samp = val_samps
+  test_samp = test_samps
     
-   data = datas
-   labels = labelss
-   ID = IDs
-   train_samp = train_samps
-   val_samp = val_samps
-   test_samp = test_samps
-    
-   basepath = Path.cwd()
-   new_path = Path('{}'.format(new_folder_paths))
-   new_folder_path = basepath / new_path
-   print(new_folder_path)
-   NIFTISampleWriter(data, labels, ID, new_folder_path)
-   #reorganization
-   newfolderpath = basepath
-   DatasetSlicerReorganizer(new_folder_path, newfolderpath, train_samp, val_samp, test_samp)
-   trainfeat, trainmasks, valfeat, valmasks, testfeat, testmasks = PathExplorerSlicedDataset(newfolderpath)
+  basepath = Path.cwd()
+  new_path = Path('{}'.format(new_folder_paths))
+  new_folder_path = basepath / new_path
+  print(new_folder_path)
+  NIFTISampleWriter(data, labels, ID, new_folder_path)
+  #reorganization
+  newfolderpath = basepath
+  DatasetSlicerReorganizer(new_folder_path, newfolderpath, train_samp, val_samp, test_samp)
+  trainfeat, trainmasks, valfeat, valmasks, testfeat, testmasks = PathExplorerSlicedDataset(newfolderpath)
 
-   if train_samp != 0:
-      for i in range(len(trainfeat)):
-        data, data_array = SliceDatasetLoader(trainfeat[i], trainmasks[i])
-        assert (data['features'].GetSize() == data.GetSize()[0,1])
-        assert (data_array['features'] == sitk.GetArrayFromImage(data)[1,2]).all()
-        assert (data_array['labels'] == sitk.GetArrayFromImage(labels)[1,2]).all()
-   elif val_samp != 0:
+  if train_samp != 0:
+    for i in range(len(trainfeat)):
+      data, data_array = SliceDatasetLoader(trainfeat[i], trainmasks[i])
+      assert (data['features'].GetSize() == data.GetSize()[0,1])
+      assert (data_array['features'] == sitk.GetArrayFromImage(data)[1,2]).all()
+      assert (data_array['labels'] == sitk.GetArrayFromImage(labels)[1,2]).all()
+  elif val_samp != 0:
     for i in range(len(valfeat)):
       data, data_array = SliceDatasetLoader(valfeat[i], valmasks[i])
       assert (data['features'].GetSize() == data.GetSize()[0,1])
       assert (data_array['features'] == sitk.GetArrayFromImage(data)[1,2]).all()
       assert (data_array['labels'] == sitk.GetArrayFromImage(labels)[1,2]).all()
-   elif test_samp != 0:
+  elif test_samp != 0:
     for i in range(len(testfeat)):
       data, data_array = SliceDatasetLoader(testfeat[i], testmasks[i])
       assert (data['features'].GetSize() == data.GetSize()[0,1])
