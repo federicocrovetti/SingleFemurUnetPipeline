@@ -19,17 +19,17 @@ def image_generator(draw):
   """
   Strategy for the generation of a 3D image
   """
-    origin = draw(st.tuples(*[st.floats(0., 100.)] * 3))
-    spacing = draw(st.tuples(*[st.floats(.1, 1.)] * 3))
-    direction = tuple([1., 0., 0., 0., 1., 0., 0., 0., 1.])
+  origin = draw(st.tuples(*[st.floats(0., 100.)] * 3))
+  spacing = draw(st.tuples(*[st.floats(.1, 1.)] * 3))
+  direction = tuple([1., 0., 0., 0., 1., 0., 0., 0., 1.])
     
-    features = np.ones((25, 25, 20))
-    image = sitk.GetImageFromArray(features)
-    image.SetOrigin(origin)
-    image.SetSpacing(spacing)
-    image.SetDirection(direction)
+  features = np.ones((25, 25, 20))
+  image = sitk.GetImageFromArray(features)
+  image.SetOrigin(origin)
+  image.SetSpacing(spacing)
+  image.SetDirection(direction)
     
-    return image
+  return image
 
 @settings(suppress_health_check=[hp.HealthCheck.too_slow], max_examples=2, deadline = None)  
 @given(image_generator(), image_generator(), text_strategy, text_strategy)
@@ -39,27 +39,27 @@ def test_NIFTISampleWriter(datas, labelss, IDs, new_folder_paths):
   the newly written one is equal to the input one in a pointwise manner.
   This include also the check on the equality of its center, direction and origin.
   """
-    data = datas
-    labels = labelss
-    ID = IDs
-    basepath = Path.cwd()
-    new_path = Path('{}'.format(new_folder_paths))
-    new_folder_path = basepath / new_path
-    
-    NIFTISampleWriter(data, labels, ID, new_folder_path)
-    image = NiftiReader(new_folder_path / 'mod{}'.format(ID)/ 'mod{}Data'.format(ID)/ 'mod{}.nii'.format(ID))
-    mask = NiftiReader(new_folder_path / 'mod{}'.format(ID)/ 'mod{}Segmentation'.format(ID)/ 'mod{}.nii'.format(ID))
-    image = image[0]
-    mask = mask[0]
-    
-    assert (sitk.GetArrayFromImage(image) == sitk.GetArrayFromImage(data)).all()
-    assert (sitk.GetArrayFromImage(mask) == sitk.GetArrayFromImage(labels)).all()
-    assert (image.GetDirection() == pytest.approx(data.GetDirection()))
-    assert (mask.GetDirection() == pytest.approx(labels.GetDirection()))
-    assert (image.GetSpacing() == pytest.approx(data.GetSpacing()))
-    assert (mask.GetSpacing() == pytest.approx(labels.GetSpacing()))
-    assert (image.GetPixelIDValue() == data.GetPixelIDValue())
-    
+  data = datas
+  labels = labelss
+  ID = IDs
+  basepath = Path.cwd()
+  new_path = Path('{}'.format(new_folder_paths))
+  new_folder_path = basepath / new_path
+   
+  NIFTISampleWriter(data, labels, ID, new_folder_path)
+  image = NiftiReader(new_folder_path / 'mod{}'.format(ID)/ 'mod{}Data'.format(ID)/ 'mod{}.nii'.format(ID))
+  mask = NiftiReader(new_folder_path / 'mod{}'.format(ID)/ 'mod{}Segmentation'.format(ID)/ 'mod{}.nii'.format(ID))
+  image = image[0]
+  mask = mask[0]
+  
+  assert (sitk.GetArrayFromImage(image) == sitk.GetArrayFromImage(data)).all()
+  assert (sitk.GetArrayFromImage(mask) == sitk.GetArrayFromImage(labels)).all()
+  assert (image.GetDirection() == pytest.approx(data.GetDirection()))
+  assert (mask.GetDirection() == pytest.approx(labels.GetDirection()))
+  assert (image.GetSpacing() == pytest.approx(data.GetSpacing()))
+  assert (mask.GetSpacing() == pytest.approx(labels.GetSpacing()))
+  assert (image.GetPixelIDValue() == data.GetPixelIDValue())
+   
 @settings(suppress_health_check=[hp.HealthCheck.too_slow, hp.HealthCheck.filter_too_much], max_examples=2, deadline = None)   
 @given(image_generator(), image_generator(), st.lists(st.text(alphabet=legitimate_chars, min_size=5,max_size = 8), min_size = 2, max_size = 2), text_strategy)
 def test_DataLoad(datas, labelss, IDs, new_folder_pathss):
@@ -68,26 +68,26 @@ def test_DataLoad(datas, labelss, IDs, new_folder_pathss):
   with the proper inner structure provided in the Readme file. 
   Checks that data stored coincide with the one loaded.
   """
-    data = datas
-    labels = labelss
-    samples = 2
-    ID = IDs
-    new_folder_paths = new_folder_pathss
-    
-    basepath = Path.cwd()
-    new_path = Path('sequ{}'.format(new_folder_paths))
-    new_folder_path = basepath / new_path
-    
-    for i in range(samples):
-        NIFTISampleWriter(data, labels, ID[i], new_folder_path)
+  data = datas
+  labels = labelss
+  samples = 2
+  ID = IDs
+  new_folder_paths = new_folder_pathss
+  
+  basepath = Path.cwd()
+  new_path = Path('sequ{}'.format(new_folder_paths))
+  new_folder_path = basepath / new_path
+  
+  for i in range(samples):
+    NIFTISampleWriter(data, labels, ID[i], new_folder_path)
     patients, data_paths, masks_paths, data_folders = PathExplorer(new_folder_path)
 
-    for i in range(len(data_paths)):
-        dataset, dataset_array = DataLoad(data_paths[i], masks_paths[i])
-        assert (dataset['features'][0].GetSize() == data.GetSize())  
-        assert (dataset['labels'][0].GetSize() == labels.GetSize())  
-        assert (dataset['features'][0].GetDirection() == pytest.approx(data.GetDirection()))
-        assert (dataset['labels'][0].GetDirection() == pytest.approx(labels.GetDirection()))
+  for i in range(len(data_paths)):
+    dataset, dataset_array = DataLoad(data_paths[i], masks_paths[i])
+    assert (dataset['features'][0].GetSize() == data.GetSize())  
+    assert (dataset['labels'][0].GetSize() == labels.GetSize())  
+    assert (dataset['features'][0].GetDirection() == pytest.approx(data.GetDirection()))
+    assert (dataset['labels'][0].GetDirection() == pytest.approx(labels.GetDirection()))
  
 
 
