@@ -4,6 +4,10 @@ import tensorflow as tf
 from SFUNet.utils.slicer_utils import SliceDatasetLoader
 
 class ImageFeeder(tf.keras.utils.Sequence):
+    """
+    Class for iteration over multiple source files. Loads sequentially each slice
+    in numpy form, until batch size requirement is satisfied, for that to be fed to the network.
+    """
     
     def __init__(self, batch_size, features_paths, labels_paths):
         self.batch_size = batch_size
@@ -15,7 +19,6 @@ class ImageFeeder(tf.keras.utils.Sequence):
         return len(self.features_paths) // self.batch_size
 
     def __getitem__(self, idx):
-        """Returns tuple (input, target) correspond to batch #idx."""
         i = idx * self.batch_size
         batch_input_data = self.features_paths[i : i +self.batch_size]
         batch_input_labels = self.labels_paths[i : i +self.batch_size]
