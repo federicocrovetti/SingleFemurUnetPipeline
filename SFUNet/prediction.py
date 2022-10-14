@@ -14,14 +14,23 @@ from IPython.display import display
 import tensorflow.keras.backend as K
 
 
-def display_mask(i):
-    mask = val_preds[i]
-    img = tf.keras.preprocessing.image.array_to_img(mask)
-    display(img)
-
 smooth = 1e-6
 
 def dice_coef(y_true, y_pred):
+    """
+    This function calculate the Dice coefficient of the predicted labels with respect to 
+    the ground truth.
+    
+    Parameters
+    ----------
+    y_true : numpy ndarray containing the values of the label
+    y_pred : numpy ndarray containing the predicted values for the label
+
+    Returns
+    -------
+    Floating number,contained in the interval [0,1], representing the dice coefficient
+
+    """
     y_true_f = K.flatten(y_true)
     y_pred_f = K.flatten(y_pred)
     prod = y_true_f * y_pred_f
@@ -29,6 +38,19 @@ def dice_coef(y_true, y_pred):
     return (2. * intersection + smooth) / (tf.experimental.numpy.sum(y_true_f) + tf.experimental.numpy.sum(y_pred_f) + smooth)
 
 def dice_coef_loss(y_true, y_pred):
+    """
+    Calculation of the Dice Coefficient Loss
+
+    Parameters
+    ----------
+    y_true : numpy ndarray containing the values of the label
+    y_pred : numpy ndarray containing the predicted values for the label
+
+    Returns
+    -------
+    Floating number,contained in the interval [0,1], representing the Dice Coefficient Loss for the network
+
+    """
     return 1 - dice_coef(y_true, y_pred)
 
 if __name__ == '__main__':
