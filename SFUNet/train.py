@@ -12,6 +12,20 @@ from argparse import RawTextHelpFormatter
 
 
 def dice_coef(y_true, y_pred):
+    """
+    This function calculate the Dice coefficient of the predicted labels with respect to 
+    the ground truth.
+    
+    Parameters
+    ----------
+    y_true : numpy ndarray containing the values of the label
+    y_pred : numpy ndarray containing the predicted values for the label
+
+    Returns
+    -------
+    Floating number,contained in the interval [0,1], representing the dice coefficient
+
+    """
     y_true_f = K.flatten(y_true)
     y_pred_f = K.flatten(y_pred)
     prod = y_true_f * y_pred_f
@@ -19,6 +33,19 @@ def dice_coef(y_true, y_pred):
     return (2. * intersection + smooth) / (tf.experimental.numpy.sum(y_true_f) + tf.experimental.numpy.sum(y_pred_f) + smooth)
 
 def dice_coef_loss(y_true, y_pred):
+    """
+    Calculation of the Dice Coefficient Loss
+
+    Parameters
+    ----------
+    y_true : numpy ndarray containing the values of the label
+    y_pred : numpy ndarray containing the predicted values for the label
+
+    Returns
+    -------
+    Floating number,contained in the interval [0,1], representing the Dice Coefficient Loss for the network
+
+    """
     return 1 - dice_coef(y_true, y_pred)
 
 if __name__ == '__main__':
@@ -27,10 +54,10 @@ if __name__ == '__main__':
                                      '''Module for the training of 'model2D' Unet-like architecture. The user is to give the dataset in the required
                                      form, the sizes of the 2D images (which are required to be squared) and is free to choose the following preferences
                                      and parameters:
-                                         - x1, x2, x3 : the percentual splittings for the stacked dataset into train, validation and test sets;
+                                         - Basepath : path to the parent folder containing Train-Val-Test data;
                                          - epochs : the number of epochs for the training;
                                          - checkpoint_filepath : the path for the creation of the file containing the callbacks;
-                                         - the path for the creation of the file where the trained model will be saved
+                                         - the path for the creation of the file where the trained model will be saved.
                                          
                                          '''
                                          , formatter_class=RawTextHelpFormatter)
