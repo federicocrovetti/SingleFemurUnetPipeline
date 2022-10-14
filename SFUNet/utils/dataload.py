@@ -9,7 +9,7 @@ from argparse import RawTextHelpFormatter
 
 def DicomReader(path):
     """
-
+    Reader for Dicom images
     Parameters
     ----------
     path :Pathlib path to the file
@@ -33,7 +33,7 @@ def DicomReader(path):
 
 def NiftiReader(path):
     """
-    
+    Reader for Nifti images
     Parameters
     ----------
     path :Pathlib path to the file
@@ -55,7 +55,7 @@ def NiftiReader(path):
 
 def NrrdReader(path):
     """
-    
+    Reader for Nrrd images
     Parameters
     ----------
     path :Pathlib path to the file
@@ -77,6 +77,8 @@ def NrrdReader(path):
 
 def PathExplorer(basepath):
     """
+    This function reads the content of the parent folder and extract the paths to patients' features and labels,
+    patient names and subfolder names.
     
     Parameters
     ----------
@@ -113,6 +115,11 @@ def PathExplorer(basepath):
 
 def DataLoad(data_path, masks_path):
     """
+    This function loads in memory, under sitk.Image and numpy arrays, the whole content of the parent folder 
+    by the list of paths directing to features and labels contained in the input lists.
+    Can be used for both batch and sequential loading. The preferred data formats to read are DICOM of NIFTI for
+    the features and NIFTI or DICOM or NRRD for the labels.
+    
     Parameters
     ----------
     data_path : list of Pathlib Paths to the folders containing the images (DICOM Series, NIFTI, ...)
@@ -123,9 +130,6 @@ def DataLoad(data_path, masks_path):
     data_and_labels : list of dict type object containing sitk.Image format images and segmentations
     data_and_labels_array : list of dict type object containing numpy format images and segmentations
     
-    
-    Can be used for both batch and sequential loading. The preferred data formats to read are DICOM of NIFTI for
-    the features and NIFTI or DICOM or NRRD for the labels.
     """
     
     data_and_labels = {'features': [], 'labels':[]}
@@ -184,6 +188,10 @@ def DataLoad(data_path, masks_path):
 
 def NIFTISampleWriter(volume_image, volume_mask, ID, new_folder_path):
     """
+    Writes as a Nifti images the input sitk.Image(s), both features and labels, into the designed 
+    parent folder with a folder structure equivalent to the required one which can be found on the readme file.
+    The newly created subfolders and files will contain the prefix 'mod'.
+    
     Parameters
     ----------
     volume_image : SimpleITK format image
@@ -191,10 +199,6 @@ def NIFTISampleWriter(volume_image, volume_mask, ID, new_folder_path):
     ID: string representing the sample's ID (patient's folder in the case of the resampling of a
          pre-existing image or the numerical ID with which to identify the folder of a new patient)
     new_folder_path : the parent folder for the new data
-
-    -------
-    Writes a Nifti format image both for data and labels in the folder identified by 'new_folder_path'
-    with the 'mod' prefix
 
     """
     
@@ -229,16 +233,16 @@ def NIFTISampleWriter(volume_image, volume_mask, ID, new_folder_path):
 
 def NIFTISingleSampleWriter(volume_image, ID, new_folder_path):
     """
+    Writes as a Nifti image the input sitk.Image into the designed 
+    parent folder with a folder structure equivalent to the required one which can be found on the readme file.
+    The newly created subfolders and files will contain the prefix 'mod'.
+    
     Parameters
     ----------
     volume_image : SimpleITK format image
     ID: string representing the sample's ID (patient's folder in the case of the resampling of a
          pre-existing image or the numerical ID with which to identify the folder of a new patient)
     new_folder_path : the parent folder for the new data
-
-    -------
-    Writes a Nifti format image both for data in the folder identified by 'new_folder_path'
-    with the 'mod' prefix
 
     """
     
@@ -264,7 +268,9 @@ def NIFTISingleSampleWriter(volume_image, ID, new_folder_path):
 
 def MDTransfer(in_image, out_image):
     """
-
+    Function for overwriting sitk.Image(s)' origin, direction and spacing inherited by
+    another image.
+    
     Parameters
     ----------
     in_image : SimpleITK image from which origin, direction and spacing will be copied
