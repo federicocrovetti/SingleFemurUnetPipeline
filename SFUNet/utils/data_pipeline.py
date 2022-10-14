@@ -10,6 +10,9 @@ from SFUNet.utils.square_complete import SquareComplete
 
 def Halve(dataset, side, train = True):
     """
+    This function takes a dict object with a list of sitk.Image(s) of shape (512,512,z) (both for features and labels)
+    and return only the upper half third, where the side taken depends on the naming of the folder into which they were
+    contained.
     
     Parameters
     ----------
@@ -17,6 +20,7 @@ def Halve(dataset, side, train = True):
     side : list of binary ints 0 or 1, where 0 indicates the Right and 1 indicates the Left
     train : Str, optional. It determines if the function should be applied even on labels if those were 
     provided as part of the dataset object. The default is True.
+    
     Returns
     -------
     dataset_cropped : dict type object with 'features' and, optionally, 'labels' as keys containing the first third of 
@@ -69,6 +73,9 @@ def Halve(dataset, side, train = True):
 
 def BedRemoval(dataset, train = True):
     """
+    This function takes a dict object with a list of sitk.Image(s) and applies to the features an erosion with 
+    fixed parameters radius = 4 and foreground value = 1 (since a binary thresholding was applied before),
+    saving the major connected component.
     
     Parameters
     ----------
@@ -119,6 +126,7 @@ def BedRemoval(dataset, train = True):
 
 def Thresholding(dataset, threshold, train = True):
     """
+    Given threshold parameters from the user, this function binarize the sitk.Image(s) contained in the dict object .
     
     Parameters
     ----------
@@ -155,6 +163,11 @@ def Thresholding(dataset, threshold, train = True):
 
 def BoundingBox(dataset):
     """
+    Using sitk.LabelStatisticsImageFilter this function identifies the bounding box of the sitk.Image(s),
+    calculate the center of it, and individuates a squared region of size (256,256), on the x,y plane,
+    which contain the ROI (e.g. the femur).
+    the region is returned in the form of a list of lists, were the foremost identifies each patient, while the 
+    foremost each individual slice composing the image.
     
     Parameters
     ----------
@@ -202,6 +215,10 @@ def BoundingBox(dataset):
 
 def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = False, train = True):
     """
+    Based on a list of lists containing the bounding boxes of each slice, this function crops each slice of the image
+    and then joins them in a (256,256,z) sitk.Image.
+    The result will be a (256,256,z) image of misaligned slices containing the femur.
+    
     Parameters
     ----------
     dataset : dict type object with 'features' and 'labels' as keys containing the array form of the images and the labels
@@ -357,28 +374,7 @@ if __name__ == '__main__':
     
     
     parser = argparse.ArgumentParser(description = 
-                                     '''Module for the cropping of the dataset capable of reading DICOM and NIFTI images.
-                                     Uses the SimpleITK class LabelStatisticsImageFilter and its method GetBoundingBox
-                                     for the automatic detection of the bounding box delimiting the labeled zone.
-                                     Takes the images from the desired directory as long as it has the required directory structure,
-                                     and writes the cropped images in the target directory with this structure:
-                                     
-                                     DATA  
-                                         |
-                                         Sample1
-                                             |
-                                             Images
-                                                 |
-                                                     >  ----
-                                             |
-                                             Labels
-                                                 |
-                                                     >  ----
-                                          |
-                                          Sample2
-                                          .
-                                          .
-                                          .
+                                     '''Module for cropping the images.
                                           
                                          '''
                                          , formatter_class=RawTextHelpFormatter)
