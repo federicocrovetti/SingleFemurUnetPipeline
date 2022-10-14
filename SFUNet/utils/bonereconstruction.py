@@ -11,6 +11,10 @@ from SFUNet.utils.dataload import PathExplorer, DataLoad, NIFTISampleWriter, NIF
 
 def ReconstructionExtMetadata(data, ID, boundingbox, new_folder_path, md, train = False):
     """
+    This function, by means of txt files containing the original metadata of the images and the bounding boxes,
+    takes a misaligned (256,256,z) image and rewrite it in a (256,512,z) image in the destination folder.
+    The slices contained in the input image will be pasted at the correct location in the new blank image,
+    reconstruting the original shape of the femur.
     
     Parameters
     ----------
@@ -86,29 +90,8 @@ def ReconstructionExtMetadata(data, ID, boundingbox, new_folder_path, md, train 
 if __name__ == '__main__':
     
     parser = argparse.ArgumentParser(description = 
-                                     '''Module for the cropping of the dataset capable of reading DICOM and NIFTI images.
-                                     Uses the SimpleITK class LabelStatisticsImageFilter and its method GetBoundingBox
-                                     for the automatic detection of the bounding box delimiting the labeled zone.
-                                     Takes the images from the desired directory as long as it has the required directory structure,
-                                     and writes the cropped images in the target directory with this structure:
+                                     '''Module for the reconstruction of the original shape of the femur. 
                                      
-                                     DATA  
-                                         |
-                                         Sample1
-                                             |
-                                             Images
-                                                 |
-                                                     >  ----
-                                             |
-                                             Labels
-                                                 |
-                                                     >  ----
-                                          |
-                                          Sample2
-                                          .
-                                          .
-                                          .
-                                          
                                          '''
                                          , formatter_class=RawTextHelpFormatter)
     parser.add_argument('basepath', 

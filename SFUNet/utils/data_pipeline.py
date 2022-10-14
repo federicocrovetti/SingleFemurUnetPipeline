@@ -374,7 +374,28 @@ if __name__ == '__main__':
     
     
     parser = argparse.ArgumentParser(description = 
-                                     '''Module for cropping the images.
+                                     '''Module for the cropping of the dataset capable of reading DICOM and NIFTI images.
+                                     Uses the SimpleITK class LabelStatisticsImageFilter and its method GetBoundingBox
+                                     for the automatic detection of the bounding box delimiting the labeled zone.
+                                     Takes the images from the desired directory as long as it has the required directory structure,
+                                     and writes the cropped images in the target directory with this structure:
+                                     
+                                     DATA  
+                                         |
+                                         Sample1
+                                             |
+                                             Images
+                                                 |
+                                                     >  ----
+                                             |
+                                             Labels
+                                                 |
+                                                     >  ----
+                                          |
+                                          Sample2
+                                          .
+                                          .
+                                          .
                                           
                                          '''
                                          , formatter_class=RawTextHelpFormatter)
