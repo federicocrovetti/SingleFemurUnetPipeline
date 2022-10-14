@@ -8,7 +8,9 @@ from SFUNet.utils.dataload import PathExplorer, DicomReader, NiftiReader, NrrdRe
 
 def PathExplorerSlicedDataset(basepath):
     """
-    
+    This function reads the content of the parent folder and extract the paths to images to be used in
+    Training, Validation or Testing.
+    It's supposed to be used on the newly reorganized dataset.
 
     Parameters
     ----------
@@ -23,8 +25,6 @@ def PathExplorerSlicedDataset(basepath):
     testfeat : List of Pathlib Paths to the images for testing
     testmasks : List of Pathlib Path to the labels for testing
     
-    N.B : it reliess on the specific naming scheme used across the package
-
     """
     trainfeat = []
     trainmasks = []
@@ -62,6 +62,10 @@ def PathExplorerSlicedDataset(basepath):
 
 def NIFTISlicesWriter(volume_image, volume_mask, ID, new_folder_path, destination):#destination = None):
     """
+    Writes as a series of Nifti images (one per slice) the input sitk.Image(s), both features and labels, into the designed 
+    parent folder with a folder structure composed by six folders: Train/Val/Test-Features/Labels
+    The newly created files will contain the prefix 'mod'.
+    
     Parameters
     ----------
     volume_image : SimpleITK format image
@@ -71,9 +75,7 @@ def NIFTISlicesWriter(volume_image, volume_mask, ID, new_folder_path, destinatio
     new_folder_path : the parent folder for the new data
     destination : String which identifies the rewritten image as train, validation or test sample. Is mandatory for the correct 
                   execution of the script for it to be choosen from the three accepted ones: Train, Val, Test
-    -------
-    Writes the input image and mask, decomposed into a single Nifti image per slice into one of three folders for images (Train-Val-Test:Features)
-    and, correspondingly for the Labels, into one out of Train-Val-Test:Labels 
+    
     """
     
     destination = str(destination)
@@ -153,7 +155,8 @@ def NIFTISlicesWriter(volume_image, volume_mask, ID, new_folder_path, destinatio
 
 def DatasetSlicerReorganizer(basepath, newfolderpath, train_samp, val_samp, test_samp):
     """
-    
+    Scans the parent folder containing the data and rewrites it as a sequence of single Nifti images, divided accordingly into 
+    Train, Val and Test sets' folders. This is done both for Features nd Labels
 
     Parameters
     ----------
@@ -163,9 +166,6 @@ def DatasetSlicerReorganizer(basepath, newfolderpath, train_samp, val_samp, test
     val_samp : integer; The number of images intended to be used as validation set out of total samples available 
     test_samp : integer; The number of images intended to be used as testing set out of total samples available 
     
-    -------
-    Scans the parent folder containing the data and rewrites it as a sequence of single Nifti images, divided accordingly into 
-    Train, Val and Test sets' folders
 
     """
     
@@ -237,11 +237,13 @@ def DatasetSlicerReorganizer(basepath, newfolderpath, train_samp, val_samp, test
         pass
     return
 
-#%%
 
 def SliceDatasetLoader(data_path, masks_path):
     """
-    
+    This function loads in memory, under sitk.Image and numpy arrays, the whole content of the parent folder 
+    by the list of paths directing to features and labels contained in the input lists.
+    Can be used for both batch and sequential loading. The preferred data formats to read are DICOM of NIFTI for
+    the features and NIFTI or DICOM or NRRD for the labels.
 
     Parameters
     ----------
@@ -310,7 +312,11 @@ def SliceDatasetLoader(data_path, masks_path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = 
-                                     '''M
+                                     '''Starting form a parent folder with the structure provided in the readme file,
+                                     the script rewrites all of the data contained there divided into six folders:
+                                         Train/Val/Test-Features/Labels
+                                         Into each folder there will be the first upper third of each patient's image/label
+                                         sliced into single nifti images, one for each slice in the original image.
                                          '''
                                          , formatter_class=RawTextHelpFormatter)
     parser.add_argument('basepath', 
