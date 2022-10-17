@@ -78,75 +78,26 @@ def NIFTISlicesWriter(volume_image, volume_mask, ID, new_folder_path, destinatio
     
     """
     
-    destination = str(destination)
     ID = str(ID)
-    train_features_folder = new_folder_path / 'TrainFeatures'
-    if train_features_folder.exists():
-        pass
-    else:
-        train_features_folder.mkdir(parents=True, exist_ok=True)
     
-    train_labels_folder = new_folder_path / 'TrainLabels'
-    
-    if train_labels_folder.exists():
-        pass
-    else:
-        train_labels_folder.mkdir(parents=True, exist_ok=True)
-    
-    val_features_folder = new_folder_path / 'ValFeatures'
-    if val_features_folder.exists():
-        pass
-    else:
-        val_features_folder.mkdir(parents=True, exist_ok=True)
-    
-    val_labels_folder = new_folder_path / 'ValLabels'
-    
-    if val_labels_folder.exists():
-        pass
-    else:
-        val_labels_folder.mkdir(parents=True, exist_ok=True)
-    test_features_folder = new_folder_path / 'TestFeatures'
-    if test_features_folder.exists():
-        pass
-    else:
-        test_features_folder.mkdir(parents=True, exist_ok=True)
-    
-    test_labels_folder = new_folder_path / 'TestLabels'
-    
-    if test_labels_folder.exists():
-        pass
-    else:
-        test_labels_folder.mkdir(parents=True, exist_ok=True)
+    if destination:
+        destination = str(destination)
+        new_features_folder = new_folder_path / '{}Features'.format(destination)
+        new_features_folder.mkdir(parents=True, exist_ok=True)
         
-    if 'Train' in destination:
+        new_labels_folder = new_folder_path / '{}Labels'.format(destination)
+        new_labels_folder.mkdir(parents=True, exist_ok=True)
+        
         for i in range(volume_image.GetSize()[2]):
-            new_data_path = train_features_folder / 'mod{}slice{}.nii'.format(ID,i)
+            new_data_path = new_features_folder / 'mod{}slice{}.nii'.format(ID,i)
             sitk.WriteImage(volume_image[:,:,i], '{}'.format(new_data_path))
         
         for i in range(volume_mask.GetSize()[2]):
-            new_data_path = train_labels_folder / 'mod{}slice{}.nii'.format(ID,i)
-            sitk.WriteImage(volume_mask[:,:,i], '{}'.format(new_data_path))
-            
-    elif 'Val' in destination:
-        for i in range(volume_image.GetSize()[2]):
-            new_data_path = val_features_folder / 'mod{}slice{}.nii'.format(ID,i)
-            sitk.WriteImage(volume_image[:,:,i], '{}'.format(new_data_path))
-        
-        for i in range(volume_mask.GetSize()[2]):
-            new_data_path = val_labels_folder / 'mod{}slice{}.nii'.format(ID,i)
-            sitk.WriteImage(volume_mask[:,:,i], '{}'.format(new_data_path))
-            
-    elif 'Test' in destination:
-        for i in range(volume_image.GetSize()[2]):
-            new_data_path = test_features_folder / 'mod{}slice{}.nii'.format(ID,i)
-            sitk.WriteImage(volume_image[:,:,i], '{}'.format(new_data_path))
-        
-        for i in range(volume_mask.GetSize()[2]):
-            new_data_path = test_labels_folder / 'mod{}slice{}.nii'.format(ID,i)
+            new_data_path = new_labels_folder / 'mod{}slice{}.nii'.format(ID,i)
             sitk.WriteImage(volume_mask[:,:,i], '{}'.format(new_data_path))
             
     else:
-        raise ValueError("{} was designed as destination, instead of the accepted ones".format(destination))
+        raise ValueError("destination wasn't assigned. Use one of the accepted ones: Train, Val, Test")
 
     return
 
@@ -170,71 +121,42 @@ def DatasetSlicerReorganizer(basepath, newfolderpath, train_samp, val_samp, test
     """
     
     patients, image_paths, masks_paths, data = PathExplorer(basepath)
-    print(image_paths)
-    masks = []
     imgs = []
     imgs_names = []
+    masks = []
     masks_names = []
     for j in range(len(image_paths)):
         for item in image_paths[j].iterdir():
             imgs.append(item)
-    for j in range(len(masks_paths)):
+            imgs_names.append(item.name)
+            
         for item in masks_paths[j].iterdir():
             masks.append(item)
-    for k in range(len(image_paths)):
-        for item in image_paths[k].iterdir():
-            imgs_names.append(item.name)
-    for l in range(len(masks_paths)):
-        for item in masks_paths[l].iterdir():
             masks_names.append(item.name)
-   
-    for i in range(0, train_samp):
-        if any(".dcm" in elem for elem in imgs_names):
-            img = DicomReader(image_paths[i])[0]
-        if any(".nii" in elem for elem in imgs_names):
-            img = NiftiReader(imgs[i])[0]
-        if any(".nrrd" in elem for elem in imgs_names):
-            img = NrrdReader(imgs[i])[0]
-        if any(".dcm" in elem for elem in masks_names):
-            mask = DicomReader(masks_paths[i])[0]
-        if any(".nii" in elem for elem in masks_names):
-            mask = NiftiReader(str(masks[i]))[0]
-        if any(".nrrd" in elem for elem in masks_names):
-            mask = NrrdReader(str(masks[i]))[0]
-        NIFTISlicesWriter(img, mask, data[i], newfolderpath, destination = 'Train')
-        
-    for i in range(train_samp, train_samp + val_samp):
-        if any(".dcm" in elem for elem in imgs_names):
-            img = DicomReader(image_paths[i])[0]
-        if any(".nii" in elem for elem in imgs_names):
-            img = NiftiReader(imgs[i])[0]
-        if any(".nrrd" in elem for elem in imgs_names):
-            img = NrrdReader(imgs[i])[0]
-        if any(".dcm" in elem for elem in masks_names):
-            mask = DicomReader(masks_paths[i])[0]
-        if any(".nii" in elem for elem in masks_names):
-            mask = NiftiReader(str(masks[i]))[0]
-        if any(".nrrd" in elem for elem in masks_names):
-            mask = NrrdReader(str(masks[i]))[0]
-        NIFTISlicesWriter(img, mask, data[i], newfolderpath, destination = 'Val')
-        
-    if test_samp != 0:
-        for i in range(train_samp + val_samp, train_samp + val_samp + test_samp):
-            if any(".dcm" in elem for elem in imgs_names):
-                img = DicomReader(image_paths[i])[0]
-            if any(".nii" in elem for elem in imgs_names):
-                img = NiftiReader(imgs[i])[0]
-            if any(".nrrd" in elem for elem in imgs_names):
-                img = NrrdReader(imgs[i])[0]
-            if any(".dcm" in elem for elem in masks_names):
-                mask = DicomReader(masks_paths[i])[0]
-            if any(".nii" in elem for elem in masks_names):
-                mask = NiftiReader(str(masks[i]))[0]
-            if any(".nrrd" in elem for elem in masks_names):
-                mask = NrrdReader(str(masks[i]))[0]
-            NIFTISlicesWriter(img, mask, data[i], newfolderpath, destination = 'Test')
-    else:
-        pass
+    
+    sets = [0, train_samp, val_samp, test_samp]
+    location = {0 : 'Train', 1 : 'Val', 2 : 'Test'}
+    execution = {'.dcm' : DicomReader, '.nii' : NiftiReader, 'nrrd' : NrrdReader}
+    
+    for i in range(len(sets)-1):
+        for j in range(sets[i], sets[i+1]):
+            for key in execution.keys():
+                if key in imgs_names[j]:
+                    if key == '.dcm':
+                        img = execution[key](image_paths[j])[0]
+                    else:
+                        img = execution[key](imgs[j])[0]
+                else:
+                    raise('{} is not of any supported file extension'.format(imgs_names[j]))
+                
+                if key in masks_names[j]:
+                    if key == '.dcm':
+                        mask = execution[key](masks_paths[j])[0]
+                    else:
+                        mask = execution[key](masks[j])[0]
+                else:
+                    raise('{} is not of any supported file extension'.format(masks_names[j]))
+                NIFTISlicesWriter(img, mask, data[i], newfolderpath, destination = location[i])
     return
 
 
@@ -260,52 +182,29 @@ def SliceDatasetLoader(data_path, masks_path):
     #just a single patient at a time. Basta che nella lista ci sia un singolo path
     data_and_labels = {'features': [], 'labels':[]}
     data_and_labels_array = {'features': [], 'labels':[]}
+    execution = {'.dcm' : DicomReader, '.nii' : NiftiReader, 'nrrd' : NrrdReader}
     
     dataname = str(data_path)
-    
-    if ".dcm" in dataname:
-        image , reader_dicom_data = DicomReader(data_path)
-        image_array = sitk.GetArrayFromImage(image)
-        image_array = np.transpose(image_array, axes=[1, 0])
-        data_and_labels['features'].append(image)
-        data_and_labels_array['features'].append(image_array)
-        
-    elif ".nii" in dataname:
-        image, reader_data = NiftiReader(data_path)
-        image_array = sitk.GetArrayFromImage(image)
-        image_array = np.transpose(image_array, axes=[1, 0])
-        data_and_labels['features'].append(image)
-        data_and_labels_array['features'].append(image_array)
-    else:
-        image, reader_data = NrrdReader(data_path)
-        image_array = sitk.GetArrayFromImage(image)
-        image_array = np.transpose(image_array, axes=[1, 0])
-        data_and_labels['features'].append(image)
-        data_and_labels_array['features'].append(image_array)
-       
-    labelname = str(masks_path)
-    
-    if ".dcm" in labelname:
-        image , reader_dicom_masks = DicomReader(masks_path)
-        image_array = sitk.GetArrayFromImage(image)
-        image_array = np.transpose(image_array, axes=[1, 0])
-        data_and_labels['labels'].append(image)
-        data_and_labels_array['labels'].append(image_array)
-    
-                
-    elif ".nrrd" in labelname:
-        image, reader_masks = NrrdReader(masks_path)
-        image_array = sitk.GetArrayFromImage(image)
-        image_array = np.transpose(image_array, axes=[1, 0])
-        data_and_labels['labels'].append(image)
-        data_and_labels_array['labels'].append(image_array) 
+    for key in execution.keys():
+        if key in dataname:
+            image , reader_dicom_data = execution[key](data_path)
+            image_array = sitk.GetArrayFromImage(image)
+            image_array = np.transpose(image_array, axes=[1, 0])
+            data_and_labels['features'].append(image)
+            data_and_labels_array['features'].append(image_array)
+        else:
+            raise('{} is not of any supported file extension'.format(dataname))
             
-    else:
-        image, reader_masks = NiftiReader(masks_path)
-        image_array = sitk.GetArrayFromImage(image)
-        image_array = np.transpose(image_array, axes=[1, 0])
-        data_and_labels['labels'].append(image)
-        data_and_labels_array['labels'].append(image_array)
+    labelname = str(masks_path)
+    for key in execution.keys():
+        if key in labelname:
+            image , reader_dicom_data = execution[key](masks_path)
+            image_array = sitk.GetArrayFromImage(image)
+            image_array = np.transpose(image_array, axes=[1, 0])
+            data_and_labels['features'].append(image)
+            data_and_labels_array['features'].append(image_array)
+        else:
+            raise('{} is not of any supported file extension'.format(dataname))
     
     return data_and_labels, data_and_labels_array
 
