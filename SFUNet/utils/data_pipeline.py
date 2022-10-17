@@ -28,47 +28,34 @@ def Halve(dataset, side, train = True):
     
     """
     
-    if train == False:
-        dataset_cropped =  {'features': []}
-        for i in range(round(len(dataset['features']))):
-            if side[i] == 0:
-                data = dataset['features'][i][0 : 256, 0 : 512]
-                data = data[:,:, round(data.GetSize()[2]/3):512]
-                MDTransfer(dataset['features'][i], data)
-                dataset_cropped['features'].append(data)
-            elif side[i] == 1:
-                data = dataset['features'][i][256 : 512, 0 : 512]
-                data = data[:,:, round(data.GetSize()[2]/3):512]
-                MDTransfer(dataset['features'][i], data)
-                dataset_cropped['features'].append(data)
-            else:
-                raise Exception('Cannot recognize if the leg intended is the right or left one. Please insert L or R in the folder name accordingly.')
-        return dataset_cropped
-    else:
-        dataset_cropped =  {'features': [], 'labels':[]}
-        for i in range(round(len(dataset['features']))):
-            if side[i] == 0:
-                data = dataset['features'][i][0 : 256, 0 : 512]
-                data = data[:,:, round(data.GetSize()[2]/3):512]
-                MDTransfer(dataset['features'][i], data)
+    dataset_cropped =  {'features': []}
+    if train:
+        dataset_cropped["labels"] = []
+    for i in range(round(len(dataset['features']))):
+        if side[i] == 0:
+            data = dataset['features'][i][0 : 256, 0 : 512]
+            data = data[:,:, round(data.GetSize()[2]/3):512]
+            MDTransfer(dataset['features'][i], data)
+            dataset_cropped['features'].append(data)
+            if train:
                 labels = dataset['labels'][i][0 : 256, 0 : 512]
                 labels = labels[:,:, round(labels.GetSize()[2]/3):512]
                 MDTransfer(dataset['labels'][i], labels)
-                dataset_cropped['features'].append(data)
                 dataset_cropped['labels'].append(labels)
-            elif side[i] == 1:
-                data = dataset['features'][i][256 : 512, 0 : 512]
-                data = data[:,:,round(data.GetSize()[2]/3):512]
-                MDTransfer(dataset['features'][i], data)
+        elif side[i] == 1:
+            data = dataset['features'][i][256 : 512, 0 : 512]
+            data = data[:,:,round(data.GetSize()[2]/3):512]
+            MDTransfer(dataset['features'][i], data)
+            dataset_cropped['features'].append(data)
+            if train:
                 labels = dataset['labels'][i][256 : 512, 0 : 512]
                 labels = labels[:,:, round(labels.GetSize()[2]/3):512]
                 MDTransfer(dataset['labels'][i], labels)
-                dataset_cropped['features'].append(data)
                 dataset_cropped['labels'].append(labels)
-            else:
-                raise Exception('Cannot recognize if the leg intended is the right or left one. Please insert L or R in the folder name accordingly.')
-                
-        return dataset_cropped
+        else:
+            raise Exception('Cannot recognize if the leg intended is the right or left one. Please insert L or R in the folder name accordingly.')
+    
+    return dataset_cropped
 
 
 def BedRemoval(dataset, train = True):
@@ -92,32 +79,23 @@ def BedRemoval(dataset, train = True):
     thresh.SetOutsideValue(0)
     thresh.SetLowerThreshold(-400)
     thresh.SetUpperThreshold(10000)
-    if train == False:
-        data = {'features' : []}
-        for i in range(len(dataset['features'])):
-            image = thresh.Execute(dataset['features'][i])
-            erode = sitk.BinaryErodeImageFilter()
-            erode.SetForegroundValue(1)
-            erode.SetKernelRadius(4)
-            bin_eroded = erode.Execute(image)
-            mask = sitk.MaskImageFilter()
-            mask.SetOutsideValue(-3000)
-            nobed_image = mask.Execute(dataset['features'][i], bin_eroded)
-            MDTransfer(dataset['features'][i], nobed_image)
-            data['features'].append(nobed_image)
-    else:
-        data = {'features' : [], 'labels' : []}
-        for i in range(len(dataset['features'])):
-            image = thresh.Execute(dataset['features'][i])
-            erode = sitk.BinaryErodeImageFilter()
-            erode.SetForegroundValue(1)
-            erode.SetKernelRadius(4)
-            bin_eroded = erode.Execute(image)
-            mask = sitk.MaskImageFilter()
-            mask.SetOutsideValue(-3000)
-            nobed_image = mask.Execute(dataset['features'][i], bin_eroded)
-            MDTransfer(dataset['features'][i], nobed_image)
-            data['features'].append(nobed_image)
+    
+    data = {'features' : []}
+    if train:
+        data["labels"] = []
+    
+    for i in range(len(dataset['features'])):
+        image = thresh.Execute(dataset['features'][i])
+        erode = sitk.BinaryErodeImageFilter()
+        erode.SetForegroundValue(1)
+        erode.SetKernelRadius(4)
+        bin_eroded = erode.Execute(image)
+        mask = sitk.MaskImageFilter()
+        mask.SetOutsideValue(-3000)
+        nobed_image = mask.Execute(dataset['features'][i], bin_eroded)
+        MDTransfer(dataset['features'][i], nobed_image)
+        data['features'].append(nobed_image)
+        if train:
             data['labels'].append(dataset['labels'][i])
             
     return data
@@ -144,18 +122,14 @@ def Thresholding(dataset, threshold, train = True):
     thresh.SetOutsideValue(0)
     thresh.SetLowerThreshold(threshold[0])
     thresh.SetUpperThreshold(threshold[1])
-    if train == False:
-        data = {'features' : []}
-        for i in range(len(dataset['features'])):
-            image = thresh.Execute(dataset['features'][i])
-            MDTransfer(dataset['features'][i], image)
-            data['features'].append(image)
-    else:
-        data = {'features' : [], 'labels' : []}
-        for i in range(len(dataset['features'])):
-            image = thresh.Execute(dataset['features'][i])
-            MDTransfer(dataset['features'][i], image)
-            data['features'].append(image)
+    data = {'features' : []}
+    if train:
+        data["labels"] = []
+    for i in range(len(dataset['features'])):
+        image = thresh.Execute(dataset['features'][i])
+        MDTransfer(dataset['features'][i], image)
+        data['features'].append(image)
+        if train:
             data['labels'].append(dataset['labels'][i])
     
     return data
@@ -234,140 +208,56 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = False, tr
     dataset_cropped : dict type object with 'features' and 'labels' as keys containins sitk.Image objects which are 
                       the cropped images and labels
     """
-    if write_to_folder == False and train == True:
-        dataset_cropped =  {'features': [], 'labels':[]}
-        for j in range(len(dataset['features'])):
-            cropped = {'features' : [], 'labels' : []}
-            for i in range(len(bbox_grouped[j])):
-                if bbox_grouped[j][i][0] == 7000:
-                    pass
-                else:
-                    y_min = ((bbox_grouped[j][i][3] - bbox_grouped[j][i][2])//2) + bbox_grouped[j][i][2] - 128
-                    y_max = ((bbox_grouped[j][i][3] - bbox_grouped[j][i][2])//2) + bbox_grouped[j][i][2] + 128
-                    if y_min >= 0 and y_max <= 512:
-                        data = dataset['features'][j][:, :, i][:, int(y_min) : int(y_max)]
-                        labels = dataset['labels'][j][:, :, i][:, int(y_min) : int(y_max)] 
-                    elif y_min >= 0 and y_max > 512:
-                        data = dataset['features'][j][:, :, i][:, (y_min - y_max -512) : 512]
-                        labels = dataset['labels'][j][:, :, i][:, (y_min - y_max -512) : 512]
-                    elif y_min < 0 and y_max <= 512:
-                        data = dataset['features'][j][:, :, i][:, 0 : (y_max + np.abs(y_min + 512))]
-                        labels = dataset['labels'][j][:, :, i][:, 0 : (y_max + np.abs(y_min + 512))]
-                    elif y_min < 0 and y_max > 512:
-                        ValueError('The input image is over 512 pixels in size on the y axis')
-                        
-                        
-                    data.SetOrigin([-9.1640584e+01, -1.8851562e+02])    
-                    labels.SetOrigin([-9.1640584e+01, -1.8851562e+02])                  
-                    cropped['features'].append(data)
-                    cropped['labels'].append(labels)
-                    
-            join = sitk.JoinSeriesImageFilter()
-            join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
-            crop_pad_volume = join.Execute([cropped['features'][k] for k in range(len(cropped['features']))])
-            crop_pad_labels = join.Execute([cropped['labels'][k] for k in range(len(cropped['labels']))])
-            MDTransfer(dataset['features'][j], crop_pad_volume)
-            MDTransfer(dataset['labels'][j], crop_pad_labels)
-            dataset_cropped['features'].append(crop_pad_volume)
-            dataset_cropped['labels'].append(crop_pad_labels)
-            
-        return dataset_cropped
+    dataset_cropped =  {'features': []}
+    if train:
+        dataset_cropped['labels'] = []
     
-    elif write_to_folder == True and train == True:
-        for j in range(len(dataset['features'])):
-            cropped = {'features' : [], 'labels' : []}
-            for i in range(len(bbox_grouped[j])):
-                if bbox_grouped[j][i][0] == 7000:
-                    pass
-                else:
-                    y_min = ((bbox_grouped[j][i][3] - bbox_grouped[j][i][2])//2) + bbox_grouped[j][i][2] - 128
-                    y_max = ((bbox_grouped[j][i][3] - bbox_grouped[j][i][2])//2) + bbox_grouped[j][i][2] + 128
-                    if y_min >= 0 and y_max <= 512:
-                        data = dataset['features'][j][:, :, i][:, int(y_min) : int(y_max)]
+    for j in range(len(dataset['features'])):
+        cropped = {'features' : []}
+        if train:
+            cropped['labels'] = []
+        for i in range(len(bbox_grouped[j])):
+            if bbox_grouped[j][i][0] == 7000:
+                pass
+            else:
+                y_min = ((bbox_grouped[j][i][3] - bbox_grouped[j][i][2])//2) + bbox_grouped[j][i][2] - 128
+                y_max = ((bbox_grouped[j][i][3] - bbox_grouped[j][i][2])//2) + bbox_grouped[j][i][2] + 128
+                if y_min >= 0 and y_max <= 512:
+                    data = dataset['features'][j][:, :, i][:, int(y_min) : int(y_max)]
+                    if train:
                         labels = dataset['labels'][j][:, :, i][:, int(y_min) : int(y_max)] 
-                    elif y_min >= 0 and y_max > 512:
-                        data = dataset['features'][j][:, :, i][:, (y_min - y_max -512) : 512]
+                elif y_min >= 0 and y_max > 512:
+                    data = dataset['features'][j][:, :, i][:, (y_min - y_max -512) : 512]
+                    if train:
                         labels = dataset['labels'][j][:, :, i][:, (y_min - y_max -512) : 512] 
-                    elif y_min < 0 and y_max <= 512:
-                        data = dataset['features'][j][:, :, i][:, 0 : (y_max + np.abs(y_min + 512))]
+                elif y_min < 0 and y_max <= 512:
+                    data = dataset['features'][j][:, :, i][:, 0 : (y_max + np.abs(y_min + 512))]
+                    if train:
                         labels = dataset['labels'][j][:, :, i][:, 0 : (y_max + np.abs(y_min + 512))]
-                    elif y_min < 0 and y_max > 512:
-                        ValueError('The input image is over 512 pixels in size on the y axis')
-                    
-                    data.SetOrigin([-9.1640584e+01, -1.8851562e+02])    
+                elif y_min < 0 and y_max > 512:
+                    ValueError('The input image is over 512 pixels in size on the y axis')
+                
+                data.SetOrigin([-9.1640584e+01, -1.8851562e+02])
+                cropped['features'].append(data)
+                if train:
                     labels.SetOrigin([-9.1640584e+01, -1.8851562e+02])               
-                    cropped['features'].append(data)
                     cropped['labels'].append(labels)
-           
-            join = sitk.JoinSeriesImageFilter()
-            join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
-            crop_pad_volume = join.Execute([cropped['features'][k] for k in range(len(cropped['features']))])
+       
+        join = sitk.JoinSeriesImageFilter()
+        join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
+        crop_pad_volume = join.Execute([cropped['features'][k] for k in range(len(cropped['features']))])
+        MDTransfer(dataset['features'][j], crop_pad_volume)
+        if train:
             crop_pad_labels = join.Execute([cropped['labels'][k] for k in range(len(cropped['labels']))])
-            MDTransfer(dataset['features'][j], crop_pad_volume)
             MDTransfer(dataset['labels'][j], crop_pad_labels)
-            
+        if write_to_folder:
             NIFTISampleWriter(crop_pad_volume, crop_pad_labels, ID[j], new_folder_path)
-        
-        return
-    
-    elif write_to_folder == False and train == False:
-        dataset_cropped =  {'features': []}
-        for j in range(len(dataset['features'])):
-            cropped = {'features' : []}
-            for i in range(len(bbox_grouped[j])):
-                if bbox_grouped[j][i][0] == 7000:
-                    pass
-                else:
-                    y_min = ((bbox_grouped[j][i][3] - bbox_grouped[j][i][2])//2) + bbox_grouped[j][i][2] - 128
-                    y_max = ((bbox_grouped[j][i][3] - bbox_grouped[j][i][2])//2) + bbox_grouped[j][i][2] + 128
-                    if y_min >= 0 and y_max <= 512:
-                        data = dataset['features'][j][:, :, i][:, int(y_min) : int(y_max)]
-                    elif y_min >= 0 and y_max > 512:
-                        data = dataset['features'][j][:, :, i][:, (y_min - y_max -512) : 512]
-                    elif y_min < 0 and y_max <= 512:
-                        data = dataset['features'][j][:, :, i][:, 0 : (y_max + np.abs(y_min + 512))]
-                    elif y_min < 0 and y_max > 512:
-                        ValueError('The input image is over 512 pixels in size on the y axis')
-                                                      
-                    data.SetOrigin([-9.1640584e+01, -1.8851562e+02])               
-                    cropped['features'].append(data)
-                    
-            join = sitk.JoinSeriesImageFilter()
-            join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
-            crop_pad_volume = join.Execute([cropped['features'][k] for k in range(len(cropped['features']))])
-            MDTransfer(dataset['features'][j], crop_pad_volume)
-            dataset_cropped['features'].append(crop_pad_volume)
-            
-        return dataset_cropped
-    
-    elif write_to_folder == True and train == False:
-        for j in range(len(dataset['features'])):
-            cropped = {'features' : []}
-            for i in range(len(bbox_grouped[j])):
-                if bbox_grouped[j][i][0] == 7000:
-                    pass
-                else:
-                    y_min = ((bbox_grouped[j][i][3] - bbox_grouped[j][i][2])//2) + bbox_grouped[j][i][2] - 128
-                    y_max = ((bbox_grouped[j][i][3] - bbox_grouped[j][i][2])//2) + bbox_grouped[j][i][2] + 128
-                    if y_min >= 0 and y_max <= 512:
-                        data = dataset['features'][j][:, :, i][:, int(y_min) : int(y_max)]
-                    elif y_min >= 0 and y_max > 512:
-                        data = dataset['features'][j][:, :, i][:, (y_min - y_max -512) : 512]
-                    elif y_min < 0 and y_max <= 512:
-                        data = dataset['features'][j][:, :, i][:, 0 : (y_max + np.abs(y_min + 512))]
-                    elif y_min < 0 and y_max > 512:
-                        ValueError('The input image is over 512 pixels in size on the y axis')
-                    
-                    data.SetOrigin([-9.1640584e+01, -1.8851562e+02])               
-                    cropped['features'].append(data)
-           
-            join = sitk.JoinSeriesImageFilter()
-            join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
-            crop_pad_volume = join.Execute([cropped['features'][k] for k in range(len(cropped['features']))])
-            MDTransfer(dataset['features'][j], crop_pad_volume)
-            NIFTISingleSampleWriter(crop_pad_volume, ID[j], new_folder_path)
-        
-        return
+            return
+        else:
+            if train:
+                return crop_pad_volume, crop_pad_labels
+            else:
+                return crop_pad_volume
 
 
 if __name__ == '__main__':
