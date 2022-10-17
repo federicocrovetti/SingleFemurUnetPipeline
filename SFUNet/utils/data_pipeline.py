@@ -251,8 +251,11 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = False, tr
             crop_pad_labels = join.Execute([cropped['labels'][k] for k in range(len(cropped['labels']))])
             MDTransfer(dataset['labels'][j], crop_pad_labels)
         if write_to_folder:
-            NIFTISampleWriter(crop_pad_volume, crop_pad_labels, ID[j], new_folder_path)
-            return
+            if train:
+                NIFTISampleWriter(crop_pad_volume, crop_pad_labels, ID[j], new_folder_path)
+            else:
+                NIFTISingleSampleWriter(crop_pad_volume, ID[j], new_folder_path)
+                
         else:
             if train:
                 return crop_pad_volume, crop_pad_labels
