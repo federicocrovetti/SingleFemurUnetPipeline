@@ -26,64 +26,41 @@ def ReconstructionExtMetadata(data, ID, boundingbox, new_folder_path, md, train 
     new_folder_path : the parent folder for the new data
     md : list containing the metadata of the original image (spacing x, y, z, origin x, y, z)
     """
+    reconstructed = {'features' : []}
+    if train:
+        reconstructed['labels'] = []
     
-   
-    if train == False:
-        for i in range(len(data['features'])):
-            print(data['features'][i].GetSize())
-        for i in range(len(data['features'])):
-            reconstructed = {'features' : []}
-            for j in range(len(boundingbox[i])):
-            
-                cut_feat = data['features'][i][:, :, j][:,:]
-                rec_slice_feat = sitk.Image(256, 512, sitk.sitkInt16)
-                rec_slice_feat[0 : 256, int(boundingbox[0][j][4]) : int(boundingbox[0][j][5])] = cut_feat #, y_min : y_max] = cut_feat
-                rec_slice_feat.SetOrigin([-9.1640584e+01, -1.8851562e+02])
-       
-                reconstructed['features'].append(rec_slice_feat)
-            
-            join = sitk.JoinSeriesImageFilter()
-            join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
-            recon_volume = join.Execute([reconstructed['features'][k] for k in range(len(reconstructed['features']))])
-            recon_volume.SetSpacing((float(md[i][0]), float(md[i][1]), float(md[i][2])))
-            recon_volume.SetOrigin((float(md[i][3]), float(md[i][4]), float(md[i][5])))
-        
-            NIFTISingleSampleWriter(recon_volume, ID, new_folder_path)
-            
-    elif train == True:
-        for i in range(len(data['features'])):
-            print(data['features'][i].GetSize())
-        for i in range(len(data['features'])):
-            reconstructed = {'features' : [], 'labels' : []}
-            for j in range(len(boundingbox[i])):
-                
-                print("{} iteration".format(j))
-                cut_feat = data['features'][i][:, :, j][:,:]
-                rec_slice_feat = sitk.Image(256, 512, sitk.sitkInt16)
-                MDTransfer(cut_feat, rec_slice_feat)
-                rec_slice_feat[0 : 256, int(boundingbox[0][j][4]) : int(boundingbox[0][j][5])] = cut_feat #, y_min : y_max] = cut_feat
-                rec_slice_feat.SetOrigin([-9.1640584e+01, -1.8851562e+02])
-        
+    for i in range(len(data['features'])):
+        reconstructed = {'features' : []}
+        if train:
+            reconstructed['labels'] = []
+        for j in range(len(boundingbox[i])):
+            cut_feat = data['features'][i][:, :, j][:,:]
+            rec_slice_feat = sitk.Image(256, 512, sitk.sitkInt16)
+            MDTransfer(cut_feat, rec_slice_feat)
+            rec_slice_feat[0 : 256, int(boundingbox[0][j][4]) : int(boundingbox[0][j][5])] = cut_feat #, y_min : y_max] = cut_feat
+            rec_slice_feat.SetOrigin([-9.1640584e+01, -1.8851562e+02])
+            reconstructed['features'].append(rec_slice_feat)
+            if train:
                 cut_lab = data['labels'][i][:, :, j][:,:]
                 rec_slice_lab = sitk.Image(256, 512, sitk.sitkInt16)
                 MDTransfer(cut_lab, rec_slice_lab)
                 rec_slice_lab[0 : 256, int(boundingbox[0][j][4]) : int(boundingbox[0][j][5])] = cut_lab# y_min : y_max] = cut_lab
                 rec_slice_lab.SetOrigin([-9.1640584e+01, -1.8851562e+02])
-                reconstructed['features'].append(rec_slice_feat)
                 reconstructed['labels'].append(rec_slice_lab)
-            
-            join = sitk.JoinSeriesImageFilter()
-            join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
-            recon_volume = join.Execute([reconstructed['features'][k] for k in range(len(reconstructed['features']))])
+        
+        join = sitk.JoinSeriesImageFilter()
+        join.SetGlobalDefaultCoordinateTolerance(14.21e-1)
+        recon_volume = join.Execute([reconstructed['features'][k] for k in range(len(reconstructed['features']))])
+        recon_volume.SetSpacing((float(md[0]), float(md[1]), float(md[2])))
+        recon_volume.SetOrigin((float(md[3]), float(md[4]), float(md[5])))
+        NIFTISingleSampleWriter(recon_volume, ID, new_folder_path)
+        if train:
             recon_labels = join.Execute([reconstructed['labels'][k] for k in range(len(reconstructed['labels']))])
-            recon_volume.SetSpacing((float(md[0]), float(md[1]), float(md[2])))
-            recon_volume.SetOrigin((float(md[3]), float(md[4]), float(md[5])))
             recon_labels.SetSpacing((float(md[0]), float(md[1]), float(md[2])))
             recon_labels.SetOrigin((float(md[3]), float(md[4]), float(md[5])))
             NIFTISampleWriter(recon_volume, recon_labels, ID, new_folder_path)
-    else:
-        pass
-        
+            
     return
 
 
