@@ -134,54 +134,58 @@ def DataLoad(data_path, masks_path):
     
     data_and_labels = {'features': [], 'labels':[]}
     data_and_labels_array = {'features': [], 'labels':[]}
+    execution = {'.dcm' : DicomReader, '.nii' : NiftiReader, 'nrrd' : NrrdReader}
     
     item_list = []
     for item in data_path.iterdir():
         item_list.append(item.name)
-    if any(".dcm" in i for i in item_list):
-        image , reader_dicom_data = DicomReader(data_path)
-        image_array = sitk.GetArrayFromImage(image)
-        image_array = np.transpose(image_array, axes=[1, 2, 0])
-        data_and_labels['features'].append(image)
-        data_and_labels_array['features'].append(image_array)
-        
-    else:
-        for item in data_path.iterdir():
-            item = str(item)
-            image, reader_data = NiftiReader(item)
-            image_array = sitk.GetArrayFromImage(image)
-            image_array = np.transpose(image_array, axes=[1, 2, 0])
-            data_and_labels['features'].append(image)
-            data_and_labels_array['features'].append(image_array)
-   
+    
+    for i in range(len(item_list)):
+        for key in execution.keys():
+            if key in item_list[i]:
+                if key == '.dcm':
+                    image , reader_dicom_data = execution[key](data_path)
+                    image_array = sitk.GetArrayFromImage(image)
+                    image_array = np.transpose(image_array, axes=[1, 0])
+                    data_and_labels['features'].append(image)
+                    data_and_labels_array['features'].append(image_array)
+                else:
+                    for item in data_path.iterdir():
+                        item = str(item)
+                        image, reader_data = execution[key](item)
+                        image_array = sitk.GetArrayFromImage(image)
+                        image_array = np.transpose(image_array, axes=[1, 2, 0])
+                        data_and_labels['features'].append(image)
+                        data_and_labels_array['features'].append(image_array)
+                    
+            else:
+                raise('{} is not of any supported file extension'.format(item_list[i]))
+                
     item_list = []
     for item in masks_path.iterdir():
         item_list.append(item.name)
-    if any(".dcm" in i for i in item_list):
-        image , reader_dicom_masks = DicomReader(masks_path)
-        image_array = sitk.GetArrayFromImage(image)
-        image_array = np.transpose(image_array, axes=[1, 2, 0])
-        data_and_labels['labels'].append(image)
-        data_and_labels_array['labels'].append(image_array)
+        
+    for i in range(len(item_list)):
+        for key in execution.keys():
+            if key in item_list[i]:
+                if key == '.dcm':
+                    image , reader_dicom_data = execution[key](masks_path)
+                    image_array = sitk.GetArrayFromImage(image)
+                    image_array = np.transpose(image_array, axes=[1, 0])
+                    data_and_labels['features'].append(image)
+                    data_and_labels_array['features'].append(image_array)
+                else:
+                    for item in masks_path.iterdir():
+                        item = str(item)
+                        image, reader_data = execution[key](item)
+                        image_array = sitk.GetArrayFromImage(image)
+                        image_array = np.transpose(image_array, axes=[1, 2, 0])
+                        data_and_labels['features'].append(image)
+                        data_and_labels_array['features'].append(image_array)
+                    
+            else:
+                raise('{} is not of any supported file extension'.format(item_list[i]))
     
-                
-    elif any(".nrrd" in i for i in item_list):
-        for item in masks_path.iterdir():
-            item = str(item)
-            image, reader_masks = NrrdReader(item)
-            image_array = sitk.GetArrayFromImage(image)
-            image_array = np.transpose(image_array, axes=[1, 2, 0])
-            data_and_labels['labels'].append(image)
-            data_and_labels_array['labels'].append(image_array) 
-            
-    else:
-        for item in masks_path.iterdir():
-            item = str(item)
-            image, reader_masks = NiftiReader(item)
-            image_array = sitk.GetArrayFromImage(image)
-            image_array = np.transpose(image_array, axes=[1, 2, 0])
-            data_and_labels['labels'].append(image)
-            data_and_labels_array['labels'].append(image_array)
             
     return data_and_labels, data_and_labels_array
 
@@ -204,24 +208,13 @@ def NIFTISampleWriter(volume_image, volume_mask, ID, new_folder_path):
     
     ID = str(ID)
     new_patient_folder = new_folder_path / 'mod{}'.format(ID)
-    if new_patient_folder.exists():
-        pass
-    else:
-        new_patient_folder.mkdir(parents=True, exist_ok=True)
+    new_patient_folder.mkdir(parents=True, exist_ok=True)
     
     data_subfolder = new_patient_folder / 'mod{}Data'.format(ID)
-    
-    if data_subfolder.exists():
-        pass
-    else:
-        data_subfolder.mkdir(parents=True, exist_ok=True)
+    data_subfolder.mkdir(parents=True, exist_ok=True)
         
     masks_subfolder = new_patient_folder / 'mod{}Segmentation'.format(ID)
-    
-    if masks_subfolder.exists():
-        pass
-    else:
-        masks_subfolder.mkdir(parents=True, exist_ok=True)
+    masks_subfolder.mkdir(parents=True, exist_ok=True)
         
     new_data_path = data_subfolder / 'mod{}.nii'.format(ID)
     sitk.WriteImage(volume_image, '{}'.format(new_data_path))
@@ -248,21 +241,13 @@ def NIFTISingleSampleWriter(volume_image, ID, new_folder_path):
     
     ID = str(ID)
     new_patient_folder = new_folder_path / 'mod{}'.format(ID)
-    if new_patient_folder.exists():
-        pass
-    else:
-        new_patient_folder.mkdir(exist_ok=True)
+    new_patient_folder.mkdir(exist_ok=True)
     
     data_subfolder = new_patient_folder / 'mod{}Data'.format(ID)
+    data_subfolder.mkdir(exist_ok=True)
     
-    if data_subfolder.exists():
-        pass
-    else:
-        data_subfolder.mkdir(exist_ok=True)
-
-        
     new_data_path = data_subfolder / 'mod{}.nii'.format(ID)
-    sitk.WriteImage(volume_image, '{}'.format(new_data_path))      
+    sitk.WriteImage(volume_image, '{}'.format(new_data_path))   
 
     return
 
