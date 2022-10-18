@@ -5,7 +5,6 @@ from argparse import RawTextHelpFormatter
 import numpy as np
 from pathlib import Path
 from SFUNet.utils.dataload import PathExplorer, DataLoad, NIFTISampleWriter, NIFTISingleSampleWriter, MDTransfer
-from SFUNet.utils.square_complete import SquareComplete
 
 
 def Halve(dataset, side, train = True):
