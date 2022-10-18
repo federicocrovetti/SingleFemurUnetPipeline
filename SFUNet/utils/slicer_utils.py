@@ -147,7 +147,7 @@ def DatasetSlicerReorganizer(basepath, newfolderpath, train_samp, val_samp, test
                     else:
                         img = execution[key](imgs[j])[0]
                 else:
-                    raise('{} is not of any supported file extension'.format(imgs_names[j]))
+                    raise Exception('{} is not of any supported file extension'.format(imgs_names[j]))
                 
                 if key in masks_names[j]:
                     if key == '.dcm':
@@ -155,7 +155,7 @@ def DatasetSlicerReorganizer(basepath, newfolderpath, train_samp, val_samp, test
                     else:
                         mask = execution[key](masks[j])[0]
                 else:
-                    raise('{} is not of any supported file extension'.format(masks_names[j]))
+                    raise Exception('{} is not of any supported file extension'.format(masks_names[j]))
                 NIFTISlicesWriter(img, mask, data[i], newfolderpath, destination = location[i])
     return
 
@@ -193,7 +193,7 @@ def SliceDatasetLoader(data_path, masks_path):
             data_and_labels['features'].append(image)
             data_and_labels_array['features'].append(image_array)
         else:
-            raise('{} is not of any supported file extension'.format(dataname))
+            raise Exception('{} is not of any supported file extension'.format(dataname))
             
     labelname = str(masks_path)
     for key in execution.keys():
@@ -204,7 +204,7 @@ def SliceDatasetLoader(data_path, masks_path):
             data_and_labels['features'].append(image)
             data_and_labels_array['features'].append(image_array)
         else:
-            raise('{} is not of any supported file extension'.format(dataname))
+            raise Exception('{} is not of any supported file extension'.format(dataname))
     
     return data_and_labels, data_and_labels_array
 
