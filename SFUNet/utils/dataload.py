@@ -241,10 +241,10 @@ def NIFTISingleSampleWriter(volume_image, ID, new_folder_path):
     
     ID = str(ID)
     new_patient_folder = new_folder_path / 'mod{}'.format(ID)
-    new_patient_folder.mkdir(exist_ok=True)
+    new_patient_folder.mkdir(parents=True,exist_ok=True)
     
     data_subfolder = new_patient_folder / 'mod{}Data'.format(ID)
-    data_subfolder.mkdir(exist_ok=True)
+    data_subfolder.mkdir(parents=True,exist_ok=True)
     
     new_data_path = data_subfolder / 'mod{}.nii'.format(ID)
     sitk.WriteImage(volume_image, '{}'.format(new_data_path))   
