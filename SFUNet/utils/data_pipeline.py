@@ -52,7 +52,7 @@ def Halve(dataset, side, train = True):
                 MDTransfer(dataset['labels'][i], labels)
                 dataset_cropped['labels'].append(labels)
         else:
-            raise Exception('Cannot recognize if the leg intended is the right or left one. Please insert L or R in the folder name accordingly.')
+            Exception('Cannot recognize if the leg intended is the right or left one. Please insert L or R in the folder name accordingly.')
     
     return dataset_cropped
 
