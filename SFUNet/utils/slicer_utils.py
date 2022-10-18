@@ -156,7 +156,7 @@ def DatasetSlicerReorganizer(basepath, newfolderpath, train_samp, val_samp, test
                         mask = execution[key](masks[j])[0]
                 else:
                     Exception('{} is not of any supported file extension'.format(masks_names[j]))
-                NIFTISlicesWriter(img, mask, data[i], newfolderpath, destination = location[i])
+            NIFTISlicesWriter(img, mask, data[i], newfolderpath, destination = location[i])
     return
 
 
