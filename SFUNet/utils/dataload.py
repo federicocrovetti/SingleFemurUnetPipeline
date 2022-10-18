@@ -160,7 +160,7 @@ def DataLoad(data_path, masks_path):
                         data_and_labels_array['features'].append(image_array)
                     
             else:
-                raise Exception('{} is not of any supported file extension'.format(item_list[i]))
+                Exception('{} is not of any supported file extension'.format(item_list[i]))
                 
     item_list = []
     for item in masks_path.iterdir():
@@ -186,7 +186,7 @@ def DataLoad(data_path, masks_path):
                         data_and_labels_array['features'].append(image_array)
                     
             else:
-                raise Exception('{} is not of any supported file extension'.format(item_list[i]))
+                Exception('{} is not of any supported file extension'.format(item_list[i]))
     
             
     return data_and_labels, data_and_labels_array
