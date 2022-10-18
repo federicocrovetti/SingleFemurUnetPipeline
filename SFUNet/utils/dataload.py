@@ -141,8 +141,9 @@ def DataLoad(data_path, masks_path):
         item_list.append(item.name)
     
     for i in range(len(item_list)):
+        filename = str(item_list[i])
         for key in execution.keys():
-            if key in item_list[i]:
+            if key in filename:
                 if key == '.dcm':
                     image , reader_dicom_data = execution[key](data_path)
                     image_array = sitk.GetArrayFromImage(image)
@@ -166,8 +167,9 @@ def DataLoad(data_path, masks_path):
         item_list.append(item.name)
         
     for i in range(len(item_list)):
+        filename = str(item_list[i])
         for key in execution.keys():
-            if key in item_list[i]:
+            if key in filename:
                 if key == '.dcm':
                     image , reader_dicom_data = execution[key](masks_path)
                     image_array = sitk.GetArrayFromImage(image)
