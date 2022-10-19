@@ -122,21 +122,19 @@ def crop_set_generator(draw):
     #print(shape)
     features = np.zeros((40, 512, 256))
     features[shape[0] : shape[1], shape[2]:shape[3], shape[4]:shape[5]] = np.full((np.abs(shape[1] - shape[0]), np.abs(shape[3] - shape[2]), np.abs(shape[5] - shape[4])), 1)
-    if side[i] == 0:
-      label = np.ones((40, 512, 256))
-    else:
-      label = np.ones((40, 512, 256))
-      image = sitk.GetImageFromArray(features)
-      labels = sitk.GetImageFromArray(label)
-      image.SetOrigin(origin)
-      image.SetSpacing(spacing)
-      image.SetDirection(direction)
-      labels.SetOrigin(origin)
-      labels.SetSpacing(spacing)
-      labels.SetDirection(direction)
-      dataset['features'].append(image)
-      dataset['labels'].append(labels)
-      slices_shapes = []
+    
+    label = np.ones((40, 512, 256))
+    image = sitk.GetImageFromArray(features)
+    labels = sitk.GetImageFromArray(label)
+    image.SetOrigin(origin)
+    image.SetSpacing(spacing)
+    image.SetDirection(direction)
+    labels.SetOrigin(origin)
+    labels.SetSpacing(spacing)
+    labels.SetDirection(direction)
+    dataset['features'].append(image)
+    dataset['labels'].append(labels)
+    slices_shapes = []
     for j in range(40):
       if any(image[:,:,j]):
         print(shape)
