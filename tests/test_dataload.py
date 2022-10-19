@@ -80,7 +80,7 @@ def test_DataLoad(datas, labelss, IDs, new_folder_pathss):
   
   for i in range(samples):
     NIFTISampleWriter(data, labels, ID[i], new_folder_path)
-    patients, data_paths, masks_paths, data_folders = PathExplorer(new_folder_path)
+  patients, data_paths, masks_paths, data_folders = PathExplorer(new_folder_path)
 
   for i in range(len(data_paths)):
     dataset, dataset_array = DataLoad(data_paths[i], masks_paths[i])
