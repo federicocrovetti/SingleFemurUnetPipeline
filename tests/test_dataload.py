@@ -84,12 +84,12 @@ def test_DataLoad(datas, labelss, IDs, new_folder_pathss):
 
   for i in range(len(data_paths)):
     dataset, dataset_array = DataLoad(data_paths[i], masks_paths[i])
-    assert all(dataset['features'][0] == data)
-    assert all(dataset['labels'][0] == labels)
-    assert (dataset['features'][0].GetSize() == data.GetSize())  
-    assert (dataset['labels'][0].GetSize() == labels.GetSize())  
-    assert (dataset['features'][0].GetDirection() == pytest.approx(data.GetDirection()))
-    assert (dataset['labels'][0].GetDirection() == pytest.approx(labels.GetDirection()))
+    assert all(dataset['features'] == data)
+    assert all(dataset['labels'] == labels)
+    assert (dataset['features'].GetSize() == data.GetSize())  
+    assert (dataset['labels'].GetSize() == labels.GetSize())  
+    assert (dataset['features'].GetDirection() == pytest.approx(data.GetDirection()))
+    assert (dataset['labels'].GetDirection() == pytest.approx(labels.GetDirection()))
  
 
 
