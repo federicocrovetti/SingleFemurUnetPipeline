@@ -172,9 +172,9 @@ def test_Thresholding(gen, low_threshold, high_threshold):
   dst = gen[0]
   threshold = [low_threshold, high_threshold]
   thres_dst = Thresholding(dst, threshold)
-  dummy_left = np.zeros(40, 512,512)
+  dummy_left = np.zeros((40, 512,512), dtype=int)
   dummy_left[:, : , 256:512] = np.full((40, 512 , 256), 1)
-  dummy_right = np.zeros(40, 512,512)
+  dummy_right = np.zeros((40, 512,512), dtype = int)
   dummy_right[:, : , 256:512] = np.full((40, 512 , 256), 1)
   for i in range(len(thres_dst['features'])):
     img_arr = sitk.GetArrayFromImage(thres_dst['features'][i])
