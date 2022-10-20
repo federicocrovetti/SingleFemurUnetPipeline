@@ -174,16 +174,16 @@ def DataLoad(data_path, masks_path):
                     image , reader_dicom_data = execution[key](masks_path)
                     image_array = sitk.GetArrayFromImage(image)
                     image_array = np.transpose(image_array, axes=[1, 0])
-                    data_and_labels['features'].append(image)
-                    data_and_labels_array['features'].append(image_array)
+                    data_and_labels['labels'].append(image)
+                    data_and_labels_array['labels'].append(image_array)
                 else:
                     for item in masks_path.iterdir():
                         item = str(item)
                         image, reader_data = execution[key](item)
                         image_array = sitk.GetArrayFromImage(image)
                         image_array = np.transpose(image_array, axes=[1, 2, 0])
-                        data_and_labels['features'].append(image)
-                        data_and_labels_array['features'].append(image_array)
+                        data_and_labels['labels'].append(image)
+                        data_and_labels_array['labels'].append(image_array)
                     
             else:
                 Exception('{} is not of any supported file extension'.format(item_list[i]))
