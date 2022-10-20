@@ -155,6 +155,10 @@ def crop_set_generator(draw):
 @given(dataset_generator())
 @settings(suppress_health_check=[hp.HealthCheck.too_slow], max_examples=50, deadline = None)
 def test_Halve(gen):
+  """
+  Testing the capability of Halve function to give back an image of shape (256, 512, z)
+  starting from an image of shape (512,512,z)
+  """
   dst = gen[0]
   side = gen[1]
   halve_dst = Halve(dst, side, train = True)
@@ -169,6 +173,10 @@ def test_Halve(gen):
 @given(dataset_generator(), st.integers(0, 50), st.integers(50, 200))
 @settings(suppress_health_check=[hp.HealthCheck.too_slow], max_examples=50, deadline = None)
 def test_Thresholding(gen, low_threshold, high_threshold):
+  """
+  Testing the capability of Thresholding function to apply a thresholding, with choosen lower and upper
+  bounds.
+  """
   dst = gen[0]
   threshold = [low_threshold, high_threshold]
   thres_dst = Thresholding(dst, threshold)
@@ -183,6 +191,11 @@ def test_Thresholding(gen, low_threshold, high_threshold):
 @given(BedImageGenerator())
 @settings(suppress_health_check=[hp.HealthCheck.too_slow], max_examples=50, deadline = None)
 def test_BedRemoval(gen):
+  """ 
+  Testing the capability of BedRemoval function to give back a dict object, containing features and
+  labels, where high value pixels belonging to thin objects (not of interest for our analysis) are 
+  removed.
+  """
   dst = gen[0]
   no_bed = BedRemoval(dst)
   for i in range(len(gen[0]['features'])):
@@ -194,6 +207,12 @@ def test_BedRemoval(gen):
 @given(crop_set_generator(), text_strategy)
 @settings(suppress_health_check=[hp.HealthCheck.too_slow], max_examples=2, deadline = None)
 def test_Crop(dst_gen, IDstr):
+  """
+  Testing the capability of Crop to reduce input images to ones with size (256,256,z), where 
+  the cropping is based on a txt file that delimit a region of size (256,256) for each slice,
+  for them to be susequently patched together in the output volume image. As for other functions,
+  it works both on features and labels.
+  """
   new_folder_path = 'g'
   dataset = dst_gen[0]
   bbox_grouped = dst_gen[1]
