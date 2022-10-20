@@ -159,6 +159,8 @@ def test_Halve(gen):
   side = gen[1]
   halve_dst = Halve(dst, side, train = True)
   for i in range(len(halve_dst['features'])):
+    assert((halve_dst['features'][i] == dst['features'][i][0:256, :, :]) or (halve_dst['features'][i] == dst['features'][i][256:512, :, :]))
+    assert((halve_dst['labels'][i] == dst['labels'][i][0:256, :, :]) or (halve_dst['labels'][i] == dst['labels'][i][256:512, :, :]))
     assert(halve_dst['features'][i].GetSize()[:2] == (256, 512))
     assert(halve_dst['labels'][i].GetSize()[:2] == (256, 512))
     assert(any(halve_dst['labels'][i][:,:,:]))
@@ -170,9 +172,13 @@ def test_Thresholding(gen, low_threshold, high_threshold):
   dst = gen[0]
   threshold = [low_threshold, high_threshold]
   thres_dst = Thresholding(dst, threshold)
+  dummy_left = np.zeros(40, 512,512)
+  dummy_left[:, : , 256:512] = np.full((40, 512 , 256), 1)
+  dummy_right = np.zeros(40, 512,512)
+  dummy_right[:, : , 256:512] = np.full((40, 512 , 256), 1)
   for i in range(len(thres_dst['features'])):
     img_arr = sitk.GetArrayFromImage(thres_dst['features'][i])
-    assert(np.any((img_arr == 0)) or np.any((img_arr == 1)))
+    assert((img_arr.all() == dummy_left.all()) or (img_arr.all() == dummy_left.all()))
 
 @given(BedImageGenerator())
 @settings(suppress_health_check=[hp.HealthCheck.too_slow], max_examples=50, deadline = None)
@@ -191,7 +197,6 @@ def test_Crop(dst_gen, IDstr):
   new_folder_path = 'g'
   dataset = dst_gen[0]
   bbox_grouped = dst_gen[1]
-  dims = dst_gen[2]
   ID = IDstr
    
   crop_dst = Crop(dataset, bbox_grouped, ID, new_folder_path)
