@@ -257,9 +257,9 @@ def Crop(dataset, bbox_grouped, ID, new_folder_path, write_to_folder = False, tr
                 
         else:
             if train:
-                return crop_pad_volume, crop_pad_labels
+                return dataset_cropped
             else:
-                return crop_pad_volume
+                return dataset_cropped
 
 
 if __name__ == '__main__':

@@ -122,7 +122,10 @@ def crop_set_generator(draw):
     #print(shape)
     features = np.zeros((40, 512, 256))
     features[shape[0] : shape[1], shape[2]:shape[3], shape[4]:shape[5]] = np.full((np.abs(shape[1] - shape[0]), np.abs(shape[3] - shape[2]), np.abs(shape[5] - shape[4])), 1)
-    
+    if side[i] == 0:
+        label = np.ones((40, 512, 256))
+    else:
+        label = np.ones((40, 512, 256))
     label = np.ones((40, 512, 256))
     image = sitk.GetImageFromArray(features)
     labels = sitk.GetImageFromArray(label)
@@ -188,9 +191,12 @@ def test_Crop(dst_gen, IDstr):
   new_folder_path = 'g'
   dataset = dst_gen[0]
   bbox_grouped = dst_gen[1]
+  dims = dst_gen[2]
   ID = IDstr
    
   crop_dst = Crop(dataset, bbox_grouped, ID, new_folder_path)
+  print('crop_dst type {}'.format(type(crop_dst)))
+  print('crop_dst is {}'.format(crop_dst))
     
   for i in range(len(crop_dst['features'])):
     assert(crop_dst['features'][i].GetSize()[0] == 256)
